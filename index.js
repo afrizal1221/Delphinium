@@ -6,8 +6,14 @@ const request = require("request");
 const rover = require('rover-api');
 const fs = require("fs");
 const fetch = require("node-fetch");
-const ascii_art = require("ascii-art")
+const https = require("https");
+const figlet = require('figlet');
 const googleTTS = require("google-tts-api");
+const { RichEmbed } = require("discord.js")
+const moment = require("moment");
+const crypto = require("crypto")
+const { send } = require('process');
+const { resolve } = require('path');
 
 var settings = JSON.parse(fs.readFileSync("settings.json"))
 var guildid = settings.guild;
@@ -15,11 +21,15 @@ var webhook;
 var loggerwebhook;
 var announcewebhook;
 var changelogwebhook;
+var nitrowebhook;
+var giveawaywebhook;
+var codewebhook;
 var prefix = "%";
+var attempted = []
 var img;
 var infoimg;
 var devimg;
-var version = "BETA-0.0.1"
+var version = "BETA-0.0.2"
 
 const client = new Discord.Client({
     messageSweepInterval:240,
@@ -36,6 +46,17 @@ function getSong(name){
     })
 }
 
+function getProfileImage(id){
+    console.log(id)
+    return new Promise((resolve) => 
+    {
+    fetch(`https://thumbnails.roblox.com/v1/users/avatar?userIds=${id}&size=420x420&format=Png&isCircular=false&_=${id}`)
+        .then((req) => req.json())
+        .then((json) => resolve(json.data[0].imageUrl))
+    }
+    )
+}
+
 function applyCharMap(map, text) {
     let out = "";
      for(let c of text.split("")) {
@@ -46,6 +67,16 @@ function applyCharMap(map, text) {
     return out;
   }
 
+function until(conditionFunction) {
+
+    const poll = resolve => {
+      if(conditionFunction()) resolve();
+      else setTimeout(_ => poll(resolve), 400);
+    }
+  
+    return new Promise(poll);
+  }
+
 function getimage(url){
     return new Promise((resolve) => {
         fetch(url)
@@ -53,6 +84,116 @@ function getimage(url){
             .then(buffer => resolve(buffer))
         })
 }
+settings.processed = settings.processed == undefined ? [] : settings.processed
+setInterval(async () => {
+    if((settings.email == true) && (settings.emails != undefined) && (settings.emails.length > 0)){
+        settings.emails.forEach(async email => {
+            var hash = crypto.createHash('md5').update(email).digest("hex")
+            var response = await fetch(`https://api4.temp-mail.org/request/mail/id/${hash}/format/json`)
+            try {
+                response = await response.json()
+            if(response.error == undefined){
+                try {
+                    response.forEach(mail => {
+                        if(settings.processed.includes(mail.mail_id) == false){
+                            settings.processed.push(mail.mail_id)
+                            var text = mail.mail_text
+                            var robloxtext = text.split("https://www.roblox.com/account/settings/verify-email?ticket=")
+                            if(robloxtext[1]){
+                                var text2 = robloxtext[1].split("]")
+                                if(text2[0]){
+                                    var usertext = text.split("(")
+                                    var username
+                                    if(usertext[1]){
+                                        var usertext2 = usertext[1].split(")")
+                                        if(usertext2[0]){
+                                            username = usertext2[0]
+                                        }
+                                    }
+                                    var code = text2[0]
+                                    //fetch("https://www.roblox.com/account/settings/verify-email?ticket=" + code)
+                                    codewebhook.send("", {embeds: [{
+                                        "title": "Email",
+                                        "description": "You just recieved an email!",
+                                        "fields": [
+                                          {
+                                            "name": "Verify",
+                                            "value": "[Click Here](https://www.roblox.com/account/settings/verify-email?ticket=" + code + ")",
+                                            "inline": true
+                                          },
+                                          {
+                                            "name": "Service",
+                                            "value": "Roblox",
+                                            "inline": true
+                                          },
+                                          {
+                                            "name": "Account",
+                                            "value": username ? username : "Username not found",
+                                            "inline": true
+                                          },
+                                          {
+                                            "name": "Email",
+                                            "value": email,
+                                            "inline": true
+                                          },
+                                          {
+                                            "name": "Type",
+                                            "value": "Verification",
+                                            "inline": true
+                                          }
+                                        ]
+                                      }]})
+                                }
+                                return
+                            }
+                            var robloxpwtext = text.split("https://www.roblox.com/login/reset-password?ticket=")
+                            if(robloxpwtext[1]){
+                                var textc = robloxpwtext[1].split("]")
+                                if(textc[1]){
+                                    var code = textc[0]
+                                    codewebhook.send("", {embeds: [{
+                                        "title": "Email",
+                                        "description": "You just recieved an email!",
+                                        "fields": [
+                                          {
+                                            "name": "Reset",
+                                            "value": "[Click Here](https://www.roblox.com/login/reset-password?ticket=" + code + ")",
+                                            "inline": true
+                                          },
+                                          {
+                                            "name": "Service",
+                                            "value": "Roblox",
+                                            "inline": true
+                                          },
+                                          {
+                                            "name": "Email",
+                                            "value": email,
+                                            "inline": true
+                                          },
+                                          {
+                                            "name": "Type",
+                                            "value": "Password Reset",
+                                            "inline": true
+                                          }
+                                        ]
+                                      }]})
+                                }
+                                return
+                            }
+                        }
+                    });
+                    fs.writeFileSync("settings.json", JSON.stringify(settings))
+                } catch (error) {
+                    
+                }
+            }
+            } catch (error) {
+                
+            }
+            
+        });
+    }
+}, 10000)
 
 const commands = {
     "lyrics": async function(msg, args, send){
@@ -60,7 +201,6 @@ const commands = {
             var song = args.join(" ")
             var info = await getSong(song);
             var lyrics = "```" + info.lyrics + "```"
-            console.log(info)
             var embed = {
                 "color": 0xB3CFDD,
                 "title": "Lyrics",
@@ -107,7 +247,16 @@ const commands = {
     },
     "ascii": async function(msg, args, send){
         if(args[0]){
-            ascii_art.font(args.join(" "), "Doom", (err, ascii) => {
+            figlet(args.join(" "), (err, ascii) => {
+                if(err) {
+                    var embed = {
+                        "color": 0xB3CFDD,
+                        "title": "Ascii",
+                        "description": "We had an error, please try again.",
+                      }
+                    send({embed: embed}).then(() => {msg.delete()})
+                    return
+                }
                 send("```" + ascii + "```")
                 msg.delete()
             })
@@ -143,6 +292,11 @@ const commands = {
             send({embed: embed}).then(() => {msg.delete()})
         }
     },
+    "embed": async function(msg, args, send){
+        if(args[0]){
+            send({embed: {"color": 0xB3CFDD,"description": args.join(" "),}}).then(() => {msg.delete()})
+        }
+    },
     "fancy": async function(msg, args, send){
         if(args[0]){
             const CharMap = {"0":"0","1":"1","2":"2","3":"3","4":"4","5":"5","6":"6","7":"7","8":"8","9":"9","a":"𝓪","b":"𝓫","c":"𝓬","d":"𝓭","e":"𝓮","f":"𝓯","g":"𝓰","h":"𝓱","i":"𝓲","j":"𝓳","k":"𝓴","l":"𝓵","m":"𝓶","n":"𝓷","o":"𝓸","p":"𝓹","q":"𝓺","r":"𝓻","s":"𝓼","t":"𝓽","u":"𝓾","v":"𝓿","w":"𝔀","x":"𝔁","y":"𝔂","z":"𝔃","A":"𝓐","B":"𝓑","C":"𝓒","D":"𝓓","E":"𝓔","F":"𝓕","G":"𝓖","H":"𝓗","I":"𝓘","J":"𝓙","K":"𝓚","L":"𝓛","M":"𝓜","N":"𝓝","O":"𝓞","P":"𝓟","Q":"𝓠","R":"𝓡","S":"𝓢","T":"𝓣","U":"𝓤","V":"𝓥","W":"𝓦","X":"𝓧","Y":"𝓨","Z":"𝓩"};
@@ -174,24 +328,22 @@ const commands = {
         if((msg.mentions.users) && (msg.mentions.users.array().length > 0)){
             var message;
             var array = msg.mentions.users.array()
-            var json = {
-                "color": 0xB3CFDD,
-                "title": "Roblox Usernames",
-                "fields": []
-            }
+            let user = msg.mentions.users.first() || msg.guild.members.find(mem => mem.user.username === args[0]) || msg.guild.members.find(mem => mem.user.tag === args[0]) || msg.guild.members.get(args[0]) || msg.author
             for (var i = 0; i<array.length;i++) {
                 var mention = array[i]
                 if (mention.id) {
                     var Account = await rover(mention.id)
-                    json.fields.push({
-                        "name": mention.username,
-                        "value": ((Account.robloxUsername != undefined) && ("Username: " + Account.robloxUsername + "\nUser-Id: " + Account.robloxId)) || "Could not find an Roblox account, sorry!",
-                        "inline": true
-                      })
+                    let embed = new Discord.RichEmbed()
+                    embed.setThumbnail(await getProfileImage(Account.robloxId))
+                    embed.setTitle(`${mention.tag}'s Roblox Info`)
+                    embed.addField('Username', Account.robloxUsername),
+                    embed.addField('Roblox ID', Account.robloxId),
+                    embed.addField('Profile Link', `https://www.roblox.com/users/${Account.robloxId}/profile`)
+                    embed.setFooter(`ID: ${user.id}`) 
+                    send({embed: embed.toJSON()})
+                    msg.delete()
                 }
             }
-            send({embed: json})
-            msg.delete()
         }
     },
     "halftoken": function(msg, args, send){
@@ -207,7 +359,7 @@ const commands = {
                 var mention = array[i]
                 if (mention.id) {
                     json.fields.push({
-                        "name": mention.username,
+                        "name": mention.username + "#" + mention.discriminator,
                         "value": Buffer.from(mention.id).toString('base64'),
                         "inline": true
                       })
@@ -265,6 +417,246 @@ const commands = {
         send({embed: embed})
         msg.delete()
     },
+    "embedmode": function(msg, args, send){
+        if(settings.embed == undefined){
+            settings.embed = false
+        }
+        if(args[0]){
+            var setting;
+            if(args[0].toUpperCase() == "ON"){
+                setting = true
+            }else if(args[0].toUpperCase() == "OFF"){
+                setting = false
+            }
+            if(setting == undefined){
+                var embed = {
+                    "title": "Embedmode",
+                    "color": 0xB3CFDD,
+                    "description": "Usage: " + prefix + "embedmode [ON/OFF]"
+                }
+                send({embed: embed})
+                msg.delete()
+                return
+            }
+            settings.embed = setting
+        }else{
+            settings.embed = !settings.embed
+        }
+        fs.writeFileSync("settings.json", JSON.stringify(settings))
+        var embed = {
+                "title": "Embedmode",
+                "color": ((settings.embed == true) && 0x6cc24a) || 0xff0000,
+                "description": ((settings.embed == true) && "Enabled Embedmode") || "Disabled Embedmode"
+            }
+
+        send({embed: embed})
+        msg.delete()
+    },
+    "giveaway-snipe": function(msg, args, send){
+        if(settings.giveaway == undefined){
+            settings.giveaway = false
+        }
+        if(args[0]){
+            var setting;
+            if(args[0].toUpperCase() == "ON"){
+                setting = true
+            }else if(args[0].toUpperCase() == "OFF"){
+                setting = false
+            }
+            if(setting == undefined){
+                var embed = {
+                    "title": "Giveaway Sniper",
+                    "color": 0xB3CFDD,
+                    "description": "Usage: " + prefix + "giveaway-snipe [ON/OFF]"
+                }
+                send({embed: embed})
+                msg.delete()
+                return
+            }
+            settings.giveaway = setting
+        }else{
+            settings.giveaway = !settings.giveaway
+        }
+        fs.writeFileSync("settings.json", JSON.stringify(settings))
+        var embed = {
+                "title": "Giveaway Sniper",
+                "color": ((settings.giveaway == true) && 0x6cc24a) || 0xff0000,
+                "description": ((settings.giveaway == true) && "Enabled Giveaway Sniper") || "Disabled Giveaway Sniper"
+            }
+
+        send({embed: embed})
+        msg.delete()
+    },
+    "nitro-snipe": function(msg, args, send){
+        if(settings.nitro == undefined){
+            settings.nitro = false
+        }
+        if(args[0]){
+            var setting;
+            if(args[0].toUpperCase() == "ON"){
+                setting = true
+            }else if(args[0].toUpperCase() == "OFF"){
+                setting = false
+            }
+            if(setting == undefined){
+                var embed = {
+                    "title": "Nitro Sniper",
+                    "color": 0xB3CFDD,
+                    "description": "Usage: " + prefix + "nitro-snipe [ON/OFF]"
+                }
+                send({embed: embed})
+                msg.delete()
+                return
+            }
+            settings.nitro = setting
+        }else{
+            settings.nitro = !settings.nitro
+        }
+        fs.writeFileSync("settings.json", JSON.stringify(settings))
+        var embed = {
+                "title": "Nitro Sniper",
+                "color": ((settings.nitro == true) && 0x6cc24a) || 0xff0000,
+                "description": ((settings.nitro == true) && "Enabled Nitro Sniper") || "Disabled Nitro Sniper"
+            }
+
+        send({embed: embed})
+        msg.delete()
+    },
+    "email": function(msg, args, send){
+        if(args[0]){
+            if(args[0].toLowerCase() == "toggle"){
+                if(settings.email == undefined){
+                    settings.email = false
+                }
+                if(args[1]){
+                    var setting;
+                    if(args[1].toUpperCase() == "ON"){
+                        setting = true
+                    }else if(args[1].toUpperCase() == "OFF"){
+                        setting = false
+                    }
+                    if(setting == undefined){
+                        var embed = {
+                            "title": "Email",
+                            "color": 0xB3CFDD,
+                            "description": "Usage: " + prefix + "email toggle [ON/OFF]"
+                        }
+                        send({embed: embed})
+                        msg.delete()
+                        return
+                    }
+                    settings.email = setting
+                }else{
+                    settings.email = !settings.email
+                }
+                fs.writeFileSync("settings.json", JSON.stringify(settings))
+                var embed = {
+                        "title": "Email",
+                        "color": ((settings.email == true) && 0x6cc24a) || 0xff0000,
+                        "description": ((settings.email == true) && "Enabled Emailservices") || "Disabled Emailservices"
+                    }
+        
+                send({embed: embed})
+                msg.delete()
+                return
+            }
+            if(args[0].toLowerCase() == "generate"){
+                settings.emails = settings.emails == undefined ? [] : settings.emails
+                if(settings.emails.length < 10){
+                    var mail = crypto.randomBytes(4).toString('hex') + "@vewku.com"
+                    var embed = {
+                        "title": "Email",
+                        "color": 0xB3CFDD,
+                        "description": "Generated Email: ```" + mail + "```"
+                    }
+                    settings.emails.push(mail)
+                    fs.writeFileSync("settings.json", JSON.stringify(settings))
+                    send({embed: embed})
+                    msg.delete()
+                    return
+                }else{
+                    var embed = {
+                        "title": "Email",
+                        "color": 0xff0000,
+                        "description": "You exceeded the maximum amount of 10 Emails! Delete one with " + prefix + "email delete [email] !"
+                    }
+
+                    send({embed: embed})
+                    msg.delete()
+                    return
+                }
+            }
+            if(args[0].toLowerCase() == "remove"){
+                settings.emails = settings.emails == undefined ? [] : settings.emails
+                if(args[1]){
+                    if(settings.emails.includes(args[1])){
+                        var embed = {
+                            "title": "Email",
+                            "color": 0xB3CFDD,
+                            "description": "Removed the email **" + args[1] + "**!"
+                        }
+                        settings.emails.splice(settings.emails.indexOf(args[1]), 1)
+                        fs.writeFileSync("settings.json", JSON.stringify(settings))
+                        send({embed: embed})
+                        msg.delete()
+                        return
+                    }else{
+                        var embed = {
+                            "title": "Email",
+                            "color": 0xB3CFDD,
+                            "description": "Could not find the Email **" + args[1] + "** in the Database."
+                        }
+                        send({embed: embed})
+                        msg.delete()
+                        return
+                    }
+                }else{
+                    var embed = {
+                        "title": "Email",
+                        "color": 0xff0000,
+                        "description": "Usage: **" + prefix + "email remove [email]**!"
+                    }
+
+                    send({embed: embed})
+                    msg.delete()
+                    return
+                }
+            }
+            if(args[0].toLowerCase() == "list"){
+                settings.emails = settings.emails == undefined ? [] : settings.emails
+                if(settings.emails.length > 0){
+                    var mails = settings.emails.join("\n")
+                    var embed = {
+                        "title": "Email",
+                        "color": 0xB3CFDD,
+                        "description": "Your Emails: ```" + mails + "```"
+                    }
+                    send({embed: embed})
+                    msg.delete()
+                    return
+                }else{
+                    var embed = {
+                        "title": "Email",
+                        "color": 0xff0000,
+                        "description": "You do not have any mails right now, generate one with **" + prefix + "email generate**!"
+                    }
+
+                    send({embed: embed})
+                    msg.delete()
+                    return
+                }
+            }
+        }else{
+            var embed = {
+                "title": "Messagelogger",
+                "color": 0xB3CFDD,
+                "description": "Usage: " + prefix + "email [toggle/generate/remove/list]"
+            }
+            send({embed: embed})
+            msg.delete()
+            return
+        }
+    },
     "logger": function(msg, args, send){
         if(settings.private == undefined){
             settings.private = false
@@ -299,6 +691,130 @@ const commands = {
 
         send({embed: embed})
         msg.delete()
+    },
+    "uinfo": async function(msg, args, send){
+        var guild = await msg.guild.fetchMembers()
+        let user = msg.mentions.users.first() || guild.members.find(mem => mem.user.username === args[0]) || guild.members.find(mem => mem.user.tag === args[0]) || guild.members.get(args[0]) || msg.author
+        if(!user) user = msg.author
+        if (user.bot) {        
+            var members = guild.members.array();
+            await members.sort((a, b) => a.joinedAt - b.joinedAt);
+            let abcd = user.displayAvatarURL
+            let gameplayed = user.presence.game || 'No game'
+            let embed = new Discord.RichEmbed()
+            embed.setTitle(`${user.tag}`)
+            embed.setThumbnail(abcd)
+            embed.setDescription(`User ID: ${user.id}`)
+            embed.addField('User Created At', moment(user.createdAt).format("llll"),true)
+            embed.addField('User Joined At', moment(msg.guild.member(user).joinedAt).format("llll"),true)
+            embed.addField('Game', gameplayed, true)
+            embed.addField('Bot', 'True', true)
+            embed.addField('Status, dnd/offline are same', user.presence.status)
+            embed.addField(`Roles [${msg.guild.member(user).roles.size}]`, msg.guild.member(user).roles.map(r => r.toLocaleString()).join(" "))
+            send({embed: embed.toJSON()}).then(() => {msg.delete()})
+        } else {
+            let user = msg.mentions.users.first() || guild.members.find(mem => mem.user.username === args[0]) || guild.members.find(mem => mem.user.tag === args[0]) || guild.members.get(args[0]) || msg.author
+            if(!user) user = msg.author
+            var members = guild.members.array();
+            await members.sort((a, b) => a.joinedAt - b.joinedAt);
+            let abcd = user.displayAvatarURL
+            let embed = new Discord.RichEmbed()
+            let gameplayed = user.presence.game || 'No game'
+            embed.setTitle(`${user.tag}`)
+            embed.setThumbnail(abcd)
+            embed.setDescription(`User ID: ${user.id}`)
+            embed.addField('User Created At', moment(user.createdAt).format("llll"),true)
+            embed.addField('User Joined At', moment(msg.guild.member(user).joinedAt).format("llll"),true)
+            embed.addField('Game', gameplayed, true)
+            embed.addField('Bot', 'False', true)
+            embed.addField('Status, dnd/offline are same', user.presence.status)
+            embed.addField(`Roles [${msg.guild.member(user).roles.size}]`, msg.guild.member(user).roles.map(r => r.toLocaleString()).join(" "))
+            send({embed: embed.toJSON()}).then(() => {msg.delete()})
+        }
+    },
+    "copydiscord": async function(msg, args, send){
+        if(msg.guild){
+            var mainguild = msg.guild
+            var embed = {
+                "title": "Discord Copier",
+                "color": 0xB3CFDB,
+                "description": "We are now going to duplicate this server and a new version should popup in your serverlist!"
+            }
+            
+            send({embed: embed})
+            msg.delete()
+            var guild = await client.user.createGuild(mainguild.name, mainguild.region, (mainguild.iconURL !== null ? await getimage(mainguild.iconURL) : undefined))
+            var categorys = {}
+            guild.setAFKTimeout(mainguild.afkTimeout)
+            var channels = mainguild.channels.array()
+            var mroles = mainguild.roles.array()
+            var gchannels = guild.channels.array()
+            var roles = {}
+            gchannels.forEach(async channel => {
+                channel.delete()
+            });
+            for(var i = 0; i<mroles.length; i++){
+                var role = mroles[i]
+                if(role.id == mainguild.id){
+                    var nrole = await guild.defaultRole.edit({name: role.name, color: role.color, hoist: role.hoist, position: role.position, permissions: role.permissions, mentionable: role.mentionable})
+                    roles[role.id.toString()] = nrole
+                }else{
+                    var nrole = await guild.createRole({name: role.name, color: role.color, hoist: role.hoist, position: role.position, permissions: role.permissions, mentionable: role.mentionable})
+                    roles[role.id.toString()] = nrole
+                }
+            }
+            await new Promise(async (resolve) => {
+                var finished = 0
+                var started = 0
+                for(var i = 0; i < channels.length; i++){
+                    var channel = channels[i]
+                    if(channel.type == "category"){
+                        started++
+                        var permissionOverwrites = []
+                        channel.permissionOverwrites.array().forEach(perms => {
+                            var role = roles[perms.id.toString()]
+                            if(role){
+                                permissionOverwrites.push({id: roles[perms.id], allow: perms.allow, deny: perms.deny})
+                            }
+                        })
+                        var nchannel = await guild.createChannel(channel.name, {permissionOverwrites: permissionOverwrites, type: channel.type, name: channel.name, position: channel.position, topic: channel.topic, nsfw: channel.nsfw, bitrate: channel.bitrate, userLimit: channel.userLimit, rateLimitPerUser: channel.rateLimitPerUser})
+                        categorys[channel.id.toString()] = nchannel
+                        finished++
+                        if(finished == started){
+                            resolve()
+                        }
+                    }
+                }
+            })
+            channels.forEach(async channel => {
+                if(channel.type != "category"){
+                    var permissionOverwrites = []
+                    channel.permissionOverwrites.array().forEach(perms => {
+                        var role = roles[perms.id.toString()]
+                        if(role){
+                            permissionOverwrites.push({id: roles[perms.id], allow: perms.allow, deny: perms.deny})
+                        }
+                    })
+                    var parent
+                    if(channel.parent){
+                        await until(_ => categorys[channel.parent.id] != undefined)
+                        if(categorys[channel.parent.id]){
+                            parent = categorys[channel.parent.id]
+                        }
+                    }
+                    var nchannel = await guild.createChannel(channel.name, {parent: parent, permissionOverwrites: permissionOverwrites, type: channel.type, name: channel.name, position: channel.position, topic: channel.topic, nsfw: channel.nsfw, userLimit: channel.userLimit, rateLimitPerUser: channel.rateLimitPerUser})
+                }
+            })
+        }else{
+            var embed = {
+                "title": "Discord Copier",
+                "color": 0xB3CFDB,
+                "description": "You executed this command in an Channel thats not in an server!"
+            }
+            
+            send({embed: embed})
+            msg.delete()
+        }
     },
     "fry": function(msg, args, send){
         if((msg.mentions.users) && (msg.attachments.size > 0)){
@@ -381,15 +897,16 @@ client.on("messageDelete", async (msg) => {
             "inline": true
           })
         loggerwebhook.send("", {embeds: [embed]}).catch(() => {
-            console.log(embed)
+
         })
     }
 })
 
+
+
 client.on("messageUpdate", async (oldmsg, msg) => {
     var oldcontent = oldmsg.content,
         newcontent = msg.content
-    console.log(oldcontent,newcontent)
     if(oldcontent == newcontent){return;}
     if((loggerwebhook != undefined) && (settings.logger == true) && (msg.author.id != client.user.id)){
         var embed = {
@@ -459,13 +976,12 @@ client.on("messageUpdate", async (oldmsg, msg) => {
             "inline": true
           })
         loggerwebhook.send("", {embeds: [embed]}).catch(() => {
-            console.log(embed)
+            
         })
     }
 })
 
 client.on('ready', async () => {
-    console.log(`Logged in as ${client.user.tag}!`);
     var guild;
     img = await getimage("https://i.imgur.com/QlCY5xy.jpg")
     infoimg = await getimage("https://i.imgur.com/DJFxfZw.png")
@@ -496,8 +1012,13 @@ client.on('ready', async () => {
     var loggerchannel;
     var changelogchannel;
     var updatechannel;
+    var nitrochannel;
+    var giveawaychannel;
     var informationcategory;
     var announcementscategory;
+    var snipercategory;
+    var emailcategory;
+    var codechannel;
     var channels = guild.channels.array();
     for(var i = 0; i<channels.length; i++){
         var tempchannel = channels[i]
@@ -513,19 +1034,44 @@ client.on('ready', async () => {
             changelogchannel = tempchannel
         }else if((tempchannel.name == "important") && (tempchannel.type == "text")){
             updatechannel = tempchannel
+        }else if((tempchannel.name == "sniper-logs") && (tempchannel.type == "category")){
+            snipercategory = tempchannel
+        }else if((tempchannel.name == "nitro") && (tempchannel.type == "text")){
+            nitrochannel = tempchannel
+        }else if((tempchannel.name == "giveaway") && (tempchannel.type == "text")){
+            giveawaychannel = tempchannel
+        }else if((tempchannel.name == "trash-mail") && (tempchannel.type == "category")){
+            emailcategory = tempchannel
+        }else if((tempchannel.name == "codes") && (tempchannel.type == "text")){
+            codechannel = tempchannel
         }
     }
     if(announcementscategory == undefined){
-        announcementscategory = (await guild.createChannel("announcements", {type: "category", reason: "If you read this you are an cool user ;)"}))
+        announcementscategory = (await guild.createChannel("announcements", {type: "category"}))
     }
     if(informationcategory == undefined){
         informationcategory = (await guild.createChannel("information", {type: "category"}))
+    }
+    if(snipercategory == undefined){
+        snipercategory = (await guild.createChannel("sniper-logs", {type: "category"}))
+    }
+    if(emailcategory == undefined){
+        emailcategory = (await guild.createChannel("trash-mail", {type: "category"}))
+    }
+    if(nitrochannel == undefined){
+        nitrochannel = (await guild.createChannel("nitro", {topic: "You will find the outputs of our " + prefix + "nitro-snipe command in this channel!." ,parent: snipercategory}))
+    }
+    if(codechannel == undefined){
+        codechannel = (await guild.createChannel("codes", {topic: "You will find the verify codes that get send to your mail generated by " + prefix + "email" ,parent: emailcategory}))
+    }
+    if(giveawaychannel == undefined){
+        giveawaychannel = (await guild.createChannel("giveaway", {topic: "You will find the outputs of our " + prefix + "giveaway-snipe command in this channel!.", parent: snipercategory}))
     }
     if(updatechannel == undefined){
         updatechannel = (await guild.createChannel("important", {topic: "This channel will be used by the Devs to inform you about new Updates regarding the Selfbot." ,parent: announcementscategory}))
     }
     if(changelogchannel == undefined){
-        changelogchannel = (await guild.createChannel("changelogs", {topic: "You will find all the changes from the versions you download in this channel", parent: announcementscategory}))
+        changelogchannel = (await guild.createChannel("changelogs", {topic: "You will find all the changes from the versions you download in this channel.", parent: announcementscategory}))
     }
     if(channel == undefined){
         channel = (await guild.createChannel("messages", {topic: "If you enable the Safemode with " + prefix + "safemode all outputs from the Selfbot will get redirected to this channel." ,parent: informationcategory}))
@@ -543,9 +1089,27 @@ client.on('ready', async () => {
     changelogwebhook = changelogwebhooks.array()[0]
     var loggerwebhooks = await loggerchannel.fetchWebhooks()
     loggerwebhook = loggerwebhooks.array()[0]
+    var nitrowebhooks = await nitrochannel.fetchWebhooks()
+    nitrowebhook = nitrowebhooks.array()[0]
+    var giveawaywebhooks = await giveawaychannel.fetchWebhooks()
+    giveawaywebhook = giveawaywebhooks.array()[0]
+    var codewebhooks = await codechannel.fetchWebhooks()
+    codewebhook = codewebhooks.array()[0]
 
     if(webhook == undefined){
         webhook = await channel.createWebhook("Information", infoimg)
+    }
+
+    if(nitrowebhook == undefined){
+        nitrowebhook = await nitrochannel.createWebhook("Nitro Sniper")
+    }
+
+    if(codewebhook == undefined){
+        codewebhook = await codechannel.createWebhook("Email Code")
+    }
+
+    if(giveawaywebhook == undefined){
+        giveawaywebhook = await giveawaychannel.createWebhook("Giveaway Sniper")
     }
 
     if(changelogwebhook == undefined){
@@ -578,14 +1142,39 @@ client.on('ready', async () => {
           }
         ]}]})
     }
+    fetch('https://raw.githubusercontent.com/StayWithMeSenpai/Delphinium/master/VERSION')
+    .then(res => res.text())
+    .then(body => {
+        body = body.replace("\n", "")
+        if(version != body){
+            announcewebhook.send("@everyone", {embeds: [{"title": "Delphinium got a new Update!",
+            "description": "An new update for Delphinium came out! Get it on our [Github](https://github.com/StayWithMeSenpai/Delphinium).",
+            "fields": [
+              {
+                "name": "Current-Version",
+                "value": version,
+                "inline": true
+              },
+              {
+                "name": "New-Version",
+                "value": body,
+                "inline": true
+              },
+              {
+                "name": "Download",
+                "value": "You can download the latest Update from our [Github](https://github.com/StayWithMeSenpai/Delphinium)!"
+              }
+            ]}]})
+        }
+    });
 
     if(loggerwebhook == undefined){
         loggerwebhook = await loggerchannel.createWebhook("Message Logger")
     }
 
     if(settings.version != version){
-        changelogwebhook.send("@everyone", {embeds: [{"title": "Delphinium Update!",
-        "description": "Be sure to always have the newest version of our Program from our [Github](https://github.com/StayWithMeSenpai/Delphinium).",
+        changelogwebhook.send("@everyone", {embeds: [{"title": "Delphinium Changelog!",
+        "description": "Be sure to always have the newest version downloaded from our [Github](https://github.com/StayWithMeSenpai/Delphinium).",
         "fields": [
           {
             "name": "Old-Version",
@@ -599,18 +1188,316 @@ client.on('ready', async () => {
           },
           {
             "name": "Changelog",
-            "value": "```+ Release\n+ Commands:\n %logger [ON/OFF]\n %safemode [ON/OFF]\n %gray [Image]\n %halftoken [Mention]\n %roblox [Mention]\n %image [Text]\n %ascii [Text]\n %fancy [Text]\n %bold [Text]\n %speak [Text]\n %lyrics [Song Name]```"
+            "value": "```+ Fixed Ascii\n+ Updated Roblox command\n+ Commands:\n %embedmode [ON/OFF]\n %giveaway-snipe [ON/OFF]\n %nitro-snipe [ON/OFF]\n %email [toggle/generate/remove]\n %uinfo [Mention]\n %copydiscord```"
           }
         ]}]})
         settings.version = version
         fs.writeFileSync("settings.json", JSON.stringify(settings))
     }
+    console.log(`Logged in as ${client.user.tag}!`);
 });
+
+function embedtostring(embed){
+    var text = "```ini\n"
+    if(embed.title){
+        text += "[" + embed.title + "] \n"
+    }
+    if(embed.description){
+        text += embed.description
+    }
+    if((embed.fields) && (embed.fields.length > 0)){
+        text += "\n"
+        for(var i = 0; i<embed.fields.length; i++){
+            var field = embed.fields[i]
+            text += field.name + ":\n   " + (field.value.replace("\n", "\n   ")) + ((i == (embed.fields.length - 1)) ? "" : "\n\n")
+        }
+    }
+    return text + "\n```"
+}
+
+client.on("message", msg => {
+    if((settings.giveaway == true) && (giveawaywebhook != undefined)){
+        try {
+            if(msg.author.id == 294882584201003009){
+                if(msg.content == "<:yay:585696613507399692>   **GIVEAWAY**   <:yay:585696613507399692>"){
+                    msg.react("🎉").then(() => {
+                        giveawaywebhook.send("", {embeds: [{
+                        "title": "Giveaway Sniper",
+                        "description": "You just joined an Giveaway!",
+                        "fields": [
+                          {
+                            "name": "Price",
+                            "value": msg.embeds[0].author.name || "**Yo we fucked up**",
+                            "inline": true
+                          },
+                          {
+                            "name": "Channel",
+                            "value": "<#" + msg.channel.id + ">",
+                            "inline": true
+                          },
+                          {
+                            "name": "Server",
+                            "value": msg.guild.name,
+                            "inline": true
+                          }
+                        ]
+                        }]
+                        })
+                    })
+                    
+                }
+            }
+        } catch (error) {
+            
+        }
+    }
+})
+
+client.on('message', msg => {
+    if(msg.author.id == client.user.id) return;
+    try {
+        if((settings.nitro == true) && (nitrowebhook != undefined)){
+            if (msg.content.includes("discordapp.com/gifts/") || msg.content.includes("discord.gift/")) {
+                var starttime = Date.now()
+                if (msg.content.includes("discordapp.com/gifts/")){
+    
+                    var code = msg.content.split("discordapp.com/gifts/").pop().replace(/\s+/g, " ").split(' ')[0]
+                    if(attempted.includes(code) == false){
+                        const https = require('https')
+    
+                        const options = {
+                          hostname: "discordapp.com",
+                          port: 443,
+                          path: "/api/v6/entitlements/gift-codes/" + code + "/redeem",
+                          method: "POST",
+                          headers: {
+                            "Authorization": settings.token
+                          }
+                        }
+                        
+                        const req = https.request(options, (res) => {
+                            var data = "";
+    
+                            res.on('data', (d) => {
+                                data += d
+                            })
+    
+                            res.on("end", () => {
+                                data = JSON.parse(data)
+                                nitrowebhook.send("", {embeds: [{
+                                    "title": "Nitro Sniper",
+                                    "description": "We just attempted to redeem an code and here are the results:",
+                                    "fields": [
+                                      {
+                                        "name": "Code",
+                                        "value": code,
+                                        "inline": true
+                                      },
+                                      {
+                                        "name": "Status",
+                                        "value": data.message,
+                                        "inline": true
+                                      },
+                                      {
+                                        "name": "Author",
+                                        "value": msg.author.tag,
+                                        "inline": true
+                                      },
+                                      {
+                                        "name": "Speed",
+                                        "value": ((starttime - Date.now()) / 1000) + "s",
+                                        "inline": true
+                                      }
+                                    ]
+                                  }]
+                                })
+                            })
+                        })
+    
+                        req.on('error', (error) => {
+                            nitrowebhook.send("", {embeds: [{
+                                "title": "Nitro Sniper",
+                                "description": "We just attempted to redeem an code and here are the results:",
+                                "fields": [
+                                  {
+                                    "name": "Code",
+                                    "value": code,
+                                    "inline": true
+                                  },
+                                  {
+                                    "name": "Status",
+                                    "value": "We encounterd an error while trying to redeem this code!",
+                                    "inline": true
+                                  }
+                                ]
+                              }]
+                            })
+                        })
+    
+                        req.end()
+                    }else{
+                        nitrowebhook.send("", {embeds: [{
+                            "title": "Nitro Sniper",
+                            "description": "We just attempted to redeem an code and here are the results:",
+                            "fields": [
+                              {
+                                "name": "Code",
+                                "value": code,
+                                "inline": true
+                              },
+                              {
+                                "name": "Status",
+                                "value": "Already attempted!",
+                                "inline": true
+                              },
+                              {
+                                "name": "Author",
+                                "value": message.author.tag,
+                                "inline": true
+                              },
+                              {
+                                "name": "Speed",
+                                "value": ((starttime - Date.now()) / 1000) + "s",
+                                "inline": true
+                              }
+                            ]
+                          }]
+                        })
+                    }
+                }else if(msg.content.includes("discord.gift/")){
+                    var code = msg.content.split("discord.gift/").pop().replace(/\s+/g, " ").split(' ')[0]
+                    if(attempted.includes(code) == false){
+                        const https = require('https')
+    
+                        const options = {
+                          hostname: "discordapp.com",
+                          port: 443,
+                          path: "/api/v6/entitlements/gift-codes/" + code + "/redeem",
+                          method: "POST",
+                          headers: {
+                            "Authorization": settings.token
+                          }
+                        }
+    
+                        const req = https.request(options, (res) => {
+                            var data = "";
+    
+                            res.on('data', (d) => {
+                                data += d
+                            })
+    
+                            res.on("end", () => {
+                                data = JSON.parse(data)
+                                nitrowebhook.send("", {embeds: [{
+                                    "title": "Nitro Sniper",
+                                    "description": "We just attempted to redeem an code and here are the results:",
+                                    "fields": [
+                                      {
+                                        "name": "Code",
+                                        "value": code,
+                                        "inline": true
+                                      },
+                                      {
+                                        "name": "Status",
+                                        "value": data.message,
+                                        "inline": true
+                                      },
+                                      {
+                                        "name": "Author",
+                                        "value": msg.author.tag,
+                                        "inline": true
+                                      },
+                                      {
+                                        "name": "Speed",
+                                        "value": ((Date.now() - starttime) / 1000) + "s",
+                                        "inline": true
+                                      }
+                                    ]
+                                  }]
+                                })
+                            })
+                        })
+    
+                        req.on('error', (error) => {
+                            nitrowebhook.send("", {embeds: [{
+                                "title": "Nitro Sniper",
+                                "description": "We just attempted to redeem an code and here are the results:",
+                                "fields": [
+                                  {
+                                    "name": "Code",
+                                    "value": code,
+                                    "inline": true
+                                  },
+                                  {
+                                    "name": "Status",
+                                    "value": "We encounterd an error while trying to redeem this code!",
+                                    "inline": true
+                                  }
+                                ]
+                              }]
+                            })
+                        })
+    
+                        req.end()
+                    }else{
+                        nitrowebhook.send("", {embeds: [{
+                            "title": "Nitro Sniper",
+                            "description": "We just attempted to redeem an code and here are the results:",
+                            "fields": [
+                              {
+                                "name": "Code",
+                                "value": code,
+                                "inline": true
+                              },
+                              {
+                                "name": "Status",
+                                "value": "Already attempted!",
+                                "inline": true
+                              },
+                              ,
+                              {
+                                "name": "Author",
+                                "value": msg.author.tag,
+                                "inline": true
+                              },
+                              {
+                                "name": "Speed",
+                                "value": ((Date.now() - starttime) / 1000) + "s",
+                                "inline": true
+                              }
+                            ]
+                          }]
+                        })
+                    }
+                }
+            }
+        }
+    } catch (error) {
+        
+    }
+})
 
 client.on('message', msg => {
   if (msg.author.id == client.user.id) {
     var original = msg.channel.send
     var send = function(data,data1){
+        var data = data
+        var data1 = data1
+        if(settings.embed == false){
+            var content = (((typeof(data) == "object") && data.content) || ((typeof(data) == "string") && data) || "")
+            var embed = (((typeof(data) == "object") && data.embed) || ((typeof(data1) == "object") && data1.embed))
+            if(embed){
+                content += "\n" + embedtostring(embed)
+                if(typeof(data) == "string"){
+                    data = content
+                    data1.embed = undefined
+                }else{
+                    data1 = data
+                    data1.embed = undefined
+                    data = content
+                }
+            }
+        }
         if(settings.private == true){
             var content = (((typeof(data) == "object") && data.content) || ((typeof(data) == "string") && data) || "")
             var config = (((typeof(data) == "object") && data) || (data1))
