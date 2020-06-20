@@ -9,11 +9,8 @@ const fetch = require("node-fetch");
 const https = require("https");
 const figlet = require('figlet');
 const googleTTS = require("google-tts-api");
-const { RichEmbed } = require("discord.js")
 const moment = require("moment");
 const crypto = require("crypto")
-const { send } = require('process');
-const { resolve } = require('path');
 
 var settings = JSON.parse(fs.readFileSync("settings.json"))
 var guildid = settings.guild;
@@ -1357,7 +1354,7 @@ client.on('message', msg => {
                               },
                               {
                                 "name": "Speed",
-                                "value": ((starttime - Date.now()) / 1000) + "s",
+                                "value": ((Date.now() - starttime) / 1000) + "s",
                                 "inline": true
                               }
                             ]
