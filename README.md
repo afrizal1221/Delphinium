@@ -2,6 +2,9 @@
 Delphinium is an Selfbot for Discord.
 It is still in very early stages of Developement so you will encounter alot of bugs, please report bugs or suggest new featurs in our Discord Server (https://discord.gg/ue9gRSP)
 
+# How to install
+Here is an [Youtube Video](https://www.youtube.com/watch?v=LJESgpiMO54)
+
 # Commands
 %logger [ON/OFF]
 
