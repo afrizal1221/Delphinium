@@ -217,7 +217,7 @@ const commands = {
           'method': 'POST',
           'url': 'https://discordapp.com/api/v6/hypesquad/online',
           'headers': {
-            'authorization': 'Put your token here',
+            'authorization': settings.token,
             'content-type': 'application/json',
           },
           body: JSON.stringify({"house_id":1})
@@ -241,7 +241,7 @@ const commands = {
       'method': 'POST',
       'url': 'https://discordapp.com/api/v6/hypesquad/online',
       'headers': {
-        'authorization': 'Put your token here',
+        'authorization': settings.token,
         'content-type': 'application/json',
       },
       body: JSON.stringify({"house_id":2})
@@ -265,7 +265,7 @@ const commands = {
           'method': 'POST',
           'url': 'https://discordapp.com/api/v6/hypesquad/online',
           'headers': {
-            'authorization': 'Put your token here',
+            'authorization': settings.token,
             'content-type': 'application/json',
           },
           body: JSON.stringify({"house_id":3})
