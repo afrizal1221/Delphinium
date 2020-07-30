@@ -1,5 +1,5 @@
 module.exports = {
-    name: "justacommand",
+    name: "placeholder",
     run: function (msg, args, send) {
 }
 }
