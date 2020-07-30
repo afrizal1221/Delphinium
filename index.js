@@ -30,7 +30,7 @@ var attempted = []
 var img;
 var infoimg;
 var devimg;
-var version = "BETA-0.0.2"
+var version = "BETA-0.0.3"
 
 const client = new Discord.Client({
     messageSweepInterval:240,
