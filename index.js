@@ -12,7 +12,6 @@ const googleTTS = require("google-tts-api");
 const moment = require("moment");
 const crypto = require("crypto")
 const RichEmbed = require('discord.js');
-const moment = require('moment')
 const superagent = require("superagent");
 
 
