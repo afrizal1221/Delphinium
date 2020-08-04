@@ -855,6 +855,33 @@ const commands = {
         embed.setFooter(`7s Cooldown`)
         send({embed: embed.toJSON()}).then(() => {msg.delete()})
     },
+    "contactme": function(msg, args, send) {
+    let CONTACTINFO = require('./contact.json')
+    let embed = new Discord.RichEmbed()
+    embed.setThumbnail(`http://www.clker.com/cliparts/m/j/s/g/j/L/contact-me-no-data-md.png`)
+    embed.setColor('#0099ff')
+    embed.setTitle(`Contact Me At:`)
+    embed.setDescription(`**
+    Roblox Profile:
+    ${CONTACTINFO.RobloxProfileLink}
+
+    SnapChat:
+    ${CONTACTINFO.SnapChatLink}
+
+    Instagram:
+    ${CONTACTINFO.InstagramLink}
+    
+    Twitch:
+    ${CONTACTINFO.TwitchLink}
+
+    Steam:
+    ${CONTACTINFO.SteamLink}
+    
+    V3rmillion:
+    ${CONTACTINFO.V3rmillion}
+    **`)
+    send({embed: embed.toJSON()}).then(() => msg.delete())
+    },
     "eval": async function(msg, args, send){
         try {
             const response = String(eval(args.join(' ')))
