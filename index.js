@@ -354,6 +354,30 @@ const commands = {
         embed.setDescription(msg.guild.roles.map(r => r.toString()).join(""))
         send({embed: embed.toJSON()}).then(() => msg.delete())
     },
+    "fuck": async function(msg, args, send){
+        let user = msg.mentions.users.first()
+        var {body} = await superagent
+        .get(`https://nekos.life/api/v2/img/classic`);        
+        let embed = new Discord.RichEmbed()
+        embed.setDescription(`**${msg.author} Fucks ${user}**`)
+        embed.setColor('RANDOM')
+        embed.setImage(body.url)
+        embed.setFooter(`'ฅ(≈>ܫ<≈)♥`)
+        embed.setTimestamp()
+        send({embed: embed.toJSON()}).then(() => {msg.delete()})
+    },
+    "kiss": async function(msg, args, send){
+        let user = msg.mentions.users.first()
+        var {body} = await superagent
+        .get(`https://nekos.life/api/v2/img/kiss`);        
+        let embed = new Discord.RichEmbed()
+        embed.setDescription(`**${msg.author} Kisses ${user}**`)
+        embed.setColor('RANDOM')
+        embed.setImage(body.url)
+        embed.setFooter(`'ฅ(≈>ܫ<≈)♥`)
+        embed.setTimestamp()
+        send({embed: embed.toJSON()}).then(() => {msg.delete()})
+    },
     "halftoken": function(msg, args, send){
         if((msg.mentions.users) && (msg.mentions.users.array().length > 0)){
             var message;
