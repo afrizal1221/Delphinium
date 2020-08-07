@@ -390,6 +390,18 @@ const commands = {
             }
         }
     },
+    "hug": async function(msg, args, send){
+        let user = msg.mentions.users.first()
+        var {body} = await superagent
+        .get(`https://nekos.life/api/v2/img/hug`);        
+        let embed = new Discord.RichEmbed()
+        embed.setDescription(`**${msg.author} Hugs ${user}**`)
+        embed.setColor('RANDOM')
+        embed.setImage(body.url)
+        embed.setFooter(`'ฅ(≈>ܫ<≈)♥`)
+        embed.setTimestamp()
+        send({embed: embed.toJSON()}).then(() => {msg.delete()})
+    },
     "safemode": function(msg, args, send){
         if(settings.private == undefined){
             settings.private = false
