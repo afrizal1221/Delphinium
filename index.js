@@ -245,6 +245,13 @@ const commands = {
             msg.delete()
         }
     },
+    "steal-pfp": async function(msg, args, send){
+    let user = msg.mentions.users.first()
+    if(!user) return msg.reply('You must mention someone to steal their avatar')
+
+    client.user.setAvatar(user.displayAvatarURL)
+    msg.react("✅")
+    },
     "ascii": async function(msg, args, send){
         if(args[0]){
             figlet(args.join(" "), (err, ascii) => {
