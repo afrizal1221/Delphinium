@@ -346,6 +346,14 @@ const commands = {
             }
         }
     },
+    "servroles": async function(msg, args, send){
+        if(msg.guild.roles.map(r => r.toString()).join("").length > 2000) return send('This server has too many roles to display (' + msg.guild.roles.size + ' roles)')
+        let embed = new Discord.RichEmbed()
+        embed.setColor('RANDOM')
+        embed.setTitle(`${msg.guild.name}'s Roles`)
+        embed.setDescription(msg.guild.roles.map(r => r.toString()).join(""))
+        send({embed: embed.toJSON()}).then(() => msg.delete())
+    },
     "halftoken": function(msg, args, send){
         if((msg.mentions.users) && (msg.mentions.users.array().length > 0)){
             var message;
