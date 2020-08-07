@@ -39,3 +39,45 @@ Here is an [Youtube Video](https://www.youtube.com/watch?v=LJESgpiMO54)
 %uinfo [Mention]
 
 %copydiscord
+
+%embed [Text]
+
+%steal-pfp [Mention]
+
+%suicide
+
+%playing [Text]
+
+%streaming [Text]
+
+%listening [Text]
+
+%watching [Text]
+
+%trap
+
+%solo
+
+%hentai
+
+%kiss [Mention]
+
+%hug [Mention]
+
+%fuck [Mention]
+
+%pp [Mention]
+
+%randomnum
+
+%bravery
+
+%brilliance
+
+%balance
+
+%eval [Code]
+
+%servroles
+
+%contactme
