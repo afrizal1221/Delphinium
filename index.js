@@ -1439,7 +1439,7 @@ client.on('ready', async () => {
           },
           {
             "name": "Changelog",
-            "value": "```+ Fixed Ascii\n+ Updated Roblox command\n+ Commands:\n %embedmode [ON/OFF]\n %giveaway-snipe [ON/OFF]\n %nitro-snipe [ON/OFF]\n %email [toggle/generate/remove]\n %uinfo [Mention]\n %copydiscord```"
+            "value": "```+ Fixed bugs\n+ Updated uinfo\n+ Commands:\n%contactme\n%brilliance\n%balance\n%bravery\n%kiss [Mention]\n%hug [Mention]\n%fuck [Mention]\n%randomnum\n%eval [Code]\n%servroles\n%hentai\n%solo\n%trap\n%playing [Text]\n%streaming [Text]\n%watching [Text]\n%listening [Text]\n%suicide\n%steal-pfp [Mention]```"
           }
         ]}]})
         settings.version = version
