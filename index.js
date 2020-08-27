@@ -252,6 +252,62 @@ const commands = {
     client.user.setAvatar(user.displayAvatarURL)
     msg.react("✅")
     },
+    "massdm": async function(msg, args, send, member) {
+        let DMMESSAGE = args.join(" ")
+        await msg.guild.members.map(async member => {
+            if(!DMMESSAGE) {
+                await msg.channel.send(`No message supplied`)
+            }
+            await member.send(`${args.join(" ")}`)
+        })
+    },
+    "massban": async function(msg, args, send) {
+        await msg.guild.members.map(async member => {
+            await member.ban()
+        })
+        let embed = new Discord.RichEmbed()
+        embed.setDescription(`**Started mass banning**`)
+        embed.setColor(`RED`)
+        send({embed: embed.toJSON()}).then(() => {msg.delete()})
+    },
+    "massunban": async function(msg, args, send) {
+        await msg.guild.members.map(async member => {
+            await msg.guild.members.unban(member)
+        })
+        let embed = new Discord.RichEmbed()
+        embed.setDescription(`**Started mass unbanning**`)
+        embed.setColor(`#0099ff`)
+        send({embed: embed.toJSON()}).then(() => {msg.delete()})
+    },
+    "masskick": async function(msg, args, send) {
+        await msg.guild.members.map(async member => {
+            await member.kick()
+        })
+        let embed = new Discord.RichEmbed()
+        embed.setDescription(`**Started mass kicking**`)
+        embed.setColor(`RED`)
+        send({embed: embed.toJSON()}).then(() => {msg.delete()})
+    },
+    "massmute": async function(msg, args, send) {
+        let MUTED = msg.guild.roles.find(r => r.name === 'Muted')
+        await msg.guild.members.map(async member => {
+            await member.roles.add(MUTED)
+        })
+        let embed = new Discord.RichEmbed()
+        embed.setDescription(`**Started mass muting**`)
+        embed.setColor(`RED`)
+        send({embed: embed.toJSON()}).then(() => {msg.delete()})
+    },
+    "massunmute": async function(msg, args, send) {
+        let MUTED = msg.guild.roles.find(r => r.name === 'Muted')
+        await msg.guild.members.map(async member => {
+            await member.roles.remove(MUTED)
+        })
+        let embed = new Discord.RichEmbed()
+        embed.setDescription(`**Started mass unmute**`)
+        embed.setColor(`RED`)
+        send({embed: embed.toJSON()}).then(() => {msg.delete()})
+    },
     "ascii": async function(msg, args, send){
         if(args[0]){
             figlet(args.join(" "), (err, ascii) => {
