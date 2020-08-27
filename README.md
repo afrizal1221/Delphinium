@@ -81,3 +81,13 @@ Here is an [Youtube Video](https://www.youtube.com/watch?v=LJESgpiMO54)
 %servroles
 
 %contactme
+
+%massban
+
+%massunban
+
+%massmute
+
+%massunmute
+
+%masskick
