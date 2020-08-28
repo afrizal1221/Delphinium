@@ -301,7 +301,7 @@ const commands = {
         msg.react("✅")
     },
     "massdm": async function (msg, args, send, member) {
-        if(!msg.author.hasPermission('ADMINISTRATOR')) return send('You do not have the permission to run this') 
+        if(!msg.member.hasPermission('ADMINISTRATOR')) return send('You do not have the permission to run this') 
         let DMMESSAGE = args.join(" ")
         await msg.guild.members.map(async member => {
             if (!DMMESSAGE) {
@@ -311,7 +311,7 @@ const commands = {
         })
     },
     "massban": async function (msg, args, send) {
-        if(!msg.author.hasPermission('BAN_MEMBERS')) return send('You do not have the permission to run this')
+        if(!msg.member.hasPermission('BAN_MEMBERS')) return send('You do not have the permission to run this')
         await msg.guild.members.map(async member => {
             await member.ban()
         })
@@ -325,7 +325,7 @@ const commands = {
         })
     },
     "massunban": async function (msg, args, send) {
-        if(!msg.author.hasPermission('BAN_MEMBERS')) return send('You do not have the permission to run this')
+        if(!msg.member.hasPermission('BAN_MEMBERS')) return send('You do not have the permission to run this')
         await msg.guild.members.map(async member => {
             await msg.guild.members.unban(member)
         })
@@ -339,7 +339,7 @@ const commands = {
         })
     },
     "masskick": async function (msg, args, send) {
-        if(!msg.author.hasPermission('KICK_MEMBERS')) return send('You do not have the permission to run this')
+        if(!msg.member.hasPermission('KICK_MEMBERS')) return send('You do not have the permission to run this')
         await msg.guild.members.map(async member => {
             await member.kick()
         })
@@ -353,11 +353,11 @@ const commands = {
         })
     },
     "massmute": async function (msg, args, send) {
-        if(!msg.author.hasPermission('MANAGE_ROLES')) return send('You do not have the permission to run this')
+        if(!msg.member.hasPermission('MANAGE_ROLES')) return send('You do not have the permission to run this')
         let MUTED = msg.guild.roles.find(r => r.name === 'Muted')
         if(!MUTED) return send('There is no muted role to use, the role name has to be "Muted"')
         await msg.guild.members.map(async member => {
-            await member.roles.add(MUTED)
+            await member.addRole(MUTED)
         })
         let embed = new Discord.RichEmbed()
         embed.setDescription(`**Started mass muting**`)
@@ -369,11 +369,11 @@ const commands = {
         })
     },
     "massunmute": async function (msg, args, send) {
-        if(!msg.author.hasPermission('MANAGE_ROLES')) return send('You do not have the permission to run this')
+        if(!msg.member.hasPermission('MANAGE_ROLES')) return send('You do not have the permission to run this')
         let MUTED = msg.guild.roles.find(r => r.name === 'Muted')
         if(!MUTED) return send('There is no muted role to use, the role name has to be "Muted"')
         await msg.guild.members.map(async member => {
-            await member.roles.remove(MUTED)
+            await member.removeRole(MUTED)
         })
         let embed = new Discord.RichEmbed()
         embed.setDescription(`**Started mass unmute**`)
