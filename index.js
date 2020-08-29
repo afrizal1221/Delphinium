@@ -384,6 +384,249 @@ const commands = {
             msg.delete()
         })
     },
+    "pat": async function (msg, args, send) {
+        let user = msg.mentions.users.first() || msg.author
+        var {
+            body
+        } = await superagent
+            .get(`https://nekos.life/api/v2/img/pat`);
+        let embed = new Discord.RichEmbed()
+        embed.setDescription(`**Have a headpat kind person ${user} ^-^**`)
+        embed.setColor('PURPLE')
+        embed.setImage(body.url)
+        embed.setFooter(`(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧                  ｡◕‿◕｡`)
+        send({
+            embed: embed.toJSON()
+        }).then(() => {
+            msg.delete()
+        })
+
+    },
+    "nsfwavatar": async function (msg, args, send) {
+        let user = msg.mentions.users.first() || msg.author
+        var {
+            body
+        } = await superagent
+            .get(`https://nekos.life/api/v2/img/nsfw_avatar`);
+        let embed = new Discord.RichEmbed()
+        embed.setTitle(`Here's a cheeky nsfw avatar ;D`)
+        embed.setColor('PURPLE')
+        embed.setImage(body.url)
+        embed.setFooter(`(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧                  ｡◕‿◕｡`)
+        send({
+            embed: embed.toJSON()
+        }).then(() => {
+            msg.delete()
+        })
+    },
+    "waifu": async function (msg, args, send) {
+        let user = msg.mentions.users.first() || msg.author
+        var {
+            body
+        } = await superagent
+            .get(`https://nekos.life/api/v2/img/waifu`);
+        let embed = new Discord.RichEmbed()
+        embed.setDescription(`**${user} Seems to have a cute waifu**`)
+        embed.setColor('PURPLE')
+        embed.setImage(body.url)
+        embed.setFooter(`(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧                  ｡◕‿◕｡`)
+        send({
+            embed: embed.toJSON()
+        }).then(() => {
+            msg.delete()
+        })
+    },
+    "poke": async function (msg, args, send) {
+        let user = msg.mentions.users.first() || msg.author
+        var {
+            body
+        } = await superagent
+            .get(`https://nekos.life/api/v2/img/poke`);
+        let embed = new Discord.RichEmbed()
+        embed.setDescription(`**Hehe ${user} get poked >:3**`)
+        embed.setColor('PURPLE')
+        embed.setImage(body.url)
+        embed.setFooter(`(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧                  ｡◕‿◕｡`)
+        send({
+            embed: embed.toJSON()
+        }).then(() => {
+            msg.delete()
+        })
+    },
+    "yuri": async function (msg, args, send) {
+        let user = msg.mentions.users.first() || msg.author
+        var {
+            body
+        } = await superagent
+            .get(`https://nekos.life/api/v2/img/yuri`);
+        let embed = new Discord.RichEmbed()
+        embed.setTitle(`Looks like we have some nice yuri here`)
+        embed.setColor('PURPLE')
+        embed.setImage(body.url)
+        embed.setFooter(`(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧                  ｡◕‿◕｡`)
+        send({
+            embed: embed.toJSON()
+        }).then(() => {
+            msg.delete()
+        })
+    },
+    "baka": async function (msg, args, send) {
+        let user = msg.mentions.users.first() || msg.author
+        var {
+            body
+        } = await superagent
+            .get(`https://nekos.life/api/v2/img/baka`);
+        let embed = new Discord.RichEmbed()
+        embed.setDescription(`**${user} stop being such a dumb baka!! ;<**`)
+        embed.setColor('PURPLE')
+        embed.setImage(body.url)
+        embed.setFooter(`(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧                  ｡◕‿◕｡`)
+        send({
+            embed: embed.toJSON()
+        }).then(() => {
+            msg.delete()
+        })
+    },
+    "smug": async function (msg, args, send) {
+        var {
+            body
+        } = await superagent
+            .get(`https://nekos.life/api/v2/img/smug`);
+        let embed = new Discord.RichEmbed()
+        embed.setTitle(`Hehe I'm a smug lil bitch >:3`)
+        embed.setColor('PURPLE')
+        embed.setImage(body.url)
+        embed.setFooter(`(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧                  ｡◕‿◕｡`)
+        send({
+            embed: embed.toJSON()
+        }).then(() => {
+            msg.delete()
+        })
+    },
+    "slap": async function (msg, args, send) {
+        let user = msg.mentions.users.first() || msg.author
+        var {
+            body
+        } = await superagent
+            .get(`https://nekos.life/api/v2/img/slap`);
+        let embed = new Discord.RichEmbed()
+        embed.setDescription(`**${user} gets demolished by my superior slap**`)
+        embed.setColor('PURPLE')
+        embed.setImage(body.url)
+        embed.setFooter(`(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧                  ｡◕‿◕｡`)
+        send({
+            embed: embed.toJSON()
+        }).then(() => {
+            msg.delete()
+        })
+    },
+    "hmph": async function (msg, args, send) {        
+        let embed = new Discord.RichEmbed()
+        embed.setTitle(`Whatever I didn't care anyway.. >;c`)
+        embed.setColor('PURPLE')
+        embed.setImage(`https://media1.tenor.com/images/b7e132fd3f4e110ea54ef8aa8f4eebbe/tenor.gif`)
+        embed.setFooter(`(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧                  ｡◕‿◕｡`)
+        send({
+            embed: embed.toJSON()
+        }).then(() => {
+            msg.delete()
+        })
+    },
+    "pout": async function (msg, args, send) {        
+        let embed = new Discord.RichEmbed()
+        embed.setTitle(`But I WANT IT >;C`)
+        embed.setColor('PURPLE')
+        embed.setImage(`https://cutewallpaper.org/21/anime-pout-face/Imgur-The-magic-of-the-Internet.gif`)
+        embed.setFooter(`(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧                  ｡◕‿◕｡`)
+        send({
+            embed: embed.toJSON()
+        }).then(() => {
+            msg.delete()
+        })
+    },
+    "feed": async function (msg, args, send) {
+        let user = msg.mentions.users.first() || msg.author
+        var {
+            body
+        } = await superagent
+            .get(`https://nekos.life/api/v2/img/feed`);
+        let embed = new Discord.RichEmbed()
+        embed.setDescription(`**Eat your food ${user} >;c**`)
+        embed.setColor('PURPLE')
+        embed.setImage(body.url)
+        embed.setFooter(`(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧                  ｡◕‿◕｡`)
+        send({
+            embed: embed.toJSON()
+        }).then(() => {
+            msg.delete()
+        })
+    },
+    "8ball": async function(msg, args, send) {
+        var {
+            body
+        } = await superagent
+            .get(`https://nekos.life/api/v2/8ball`);
+        let ques = args.join(" ")
+        let embed = new Discord.RichEmbed()
+        embed.setTitle('Magic 8Ball')
+        embed.setDescription(`**${ques}**` + '**?**')
+        embed.setImage(body.url)
+        send({
+            embed: embed.toJSON()
+        }).then(() => {
+            msg.delete()
+        })
+    },
+    "foxgirl": async function(msg, args, send) {
+        var {
+            body
+        } = await superagent
+            .get(`https://nekos.life/api/v2/img/fox_girl`);
+        let embed = new Discord.RichEmbed()
+        embed.setTitle('Have a cute foxy~ ^-^')
+        embed.setColor('PURPLE')
+        embed.setImage(body.url)
+        embed.setFooter(`(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧                  ｡◕‿◕｡`) 
+        send({
+            embed: embed.toJSON()
+        }).then(() => {
+            msg.delete()
+        })
+    },
+    "neko": async function(msg, args, send) {
+        var {
+            body
+        } = await superagent
+            .get(`https://nekos.life/api/v2/img/neko`);
+        let embed = new Discord.RichEmbed()
+        embed.setTitle('Have a cute neko~ ^-^')
+        embed.setColor('PURPLE')
+        embed.setImage(body.url)
+        embed.setFooter(`(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧                  ｡◕‿◕｡`) 
+        send({
+            embed: embed.toJSON()
+        }).then(() => {
+            msg.delete()
+        })
+    },
+    "rfuck": async function (msg, args, send) {
+        let user = msg.mentions.users.first() || msg.author
+        var {
+            body
+        } = await superagent
+            .get(`https://nekos.life/api/v2/img/classic`);
+        let embed = new Discord.RichEmbed()
+        embed.setDescription(`**${user} Fucks ${msg.author}**`)
+        embed.setColor('RANDOM')
+        embed.setImage(body.url)
+        embed.setFooter(`'ฅ(≈>ܫ<≈)♥`)
+        embed.setTimestamp()
+        send({
+            embed: embed.toJSON()
+        }).then(() => {
+            msg.delete()
+        })
+    },
     "invites": async function (msg, args, send) {
         var user = msg.mentions.users.first() || msg.author
         msg.guild.fetchInvites()
