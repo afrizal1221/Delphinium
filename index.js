@@ -250,6 +250,19 @@ const commands = {
             msg.delete()
         }
     },
+    "repeat": async function(msg ,args, send) {
+    let time = ms(args[0])
+    let message = args.join(" ").slice(args[0].length)
+    if(!interval) {
+        interval = setInterval(function() { msg.channel.send(message) }, time)
+        send(`Starting your message: "${message} " on repeat for ${time}ms`)
+        return;
+     }
+     
+    clearInterval(interval)
+    interval = undefined;
+    send('Ended the message repeating')
+   },
     "ascii": async function (msg, args, send) {
         if (args[0]) {
             figlet(args.join(" "), (err, ascii) => {
