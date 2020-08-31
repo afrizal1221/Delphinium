@@ -1566,13 +1566,31 @@ const commands = {
         })
     },
     "suck": async function (msg, args, send) {
-        let user = msg.mentions.users.first()
+        let user = msg.mentions.users.first() || msg.author
         var {
             body
         } = await superagent
             .get(`https://nekos.life/api/v2/img/bj`);
         let embed = new Discord.RichEmbed()
         embed.setDescription(`**${msg.author} Sucks off ${user}**`)
+        embed.setColor('RANDOM')
+        embed.setImage(body.url)
+        embed.setFooter(`'ฅ(≈>ܫ<≈)♥`)
+        embed.setTimestamp()
+        send({
+            embed: embed.toJSON()
+        }).then(() => {
+            msg.delete()
+        })
+    },
+    "rsuck": async function (msg, args, send) {
+        let user = msg.mentions.users.first() || msg.author
+        var {
+            body
+        } = await superagent
+            .get(`https://nekos.life/api/v2/img/bj`);
+        let embed = new Discord.RichEmbed()
+        embed.setDescription(`**${user} Sucks off ${msg.author}**`)
         embed.setColor('RANDOM')
         embed.setImage(body.url)
         embed.setFooter(`'ฅ(≈>ܫ<≈)♥`)
@@ -1798,7 +1816,108 @@ const commands = {
                 });
             }
         }
-    }
+    },
+    "help-anime": async function(msg, args, send) {
+        let embed = new Discord.RichEmbed()
+        embed.setColor('PURPLE')
+        embed.setTitle('Help Section: Anime')
+        embed.setDescription(`
+        **%suicide**
+        **%kiss <user>**
+        **%hug <user>**
+        **%pout**
+        **%hmph**
+        **%pat <user>**
+        **%neko**
+        **%foxgirl**
+        **%feed <user>**
+        **%slap <user>**
+        **%smug**
+        **%baka <user>**
+        **%poke <user>**
+        **%waifu <user>**`)
+        send({embed: embed.toJSON()}).then(() => {msg.delete()})
+    },
+    "help-misc": async function(msg, args, send) {
+        let embed = new Discord.RichEmbed()
+        embed.setColor('ORANGE')
+        embed.setTitle('Help Section: Misc')
+        embed.setDescription(`
+        **%gray <file:image>**
+        **%halftoken <user>**
+        **%roblox <user>**
+        **%image <text>**
+        **%ascii <text>**
+        **%fancy <text>**
+        **%bold <text>**
+        **%speak <text>**
+        **%lyrics <song:name>**
+        **%uinfo <user>**
+        **%copydiscord**
+        **%embed <text>**
+        **%pp <user>**
+        **%randomnum**
+        **%servroles**
+        **%contactme**`)
+        send({embed: embed.toJSON()}).then(() => {msg.delete()})
+    },
+    "help-user": async function(msg, args, send) {
+        let embed = new Discord.RichEmbed()
+        embed.setColor('CYAN')
+        embed.setTitle('Help Section: User')
+        embed.setDescription(`
+        **%bravery**
+        **%balance**
+        **%brilliance**
+        **%playing <text>**
+        **%watching <text>**
+        **%listening <text>**
+        **%streaming <text>**
+        **%steal-pfp <user>**
+        **%eval <code>**`)
+        send({embed: embed.toJSON()}).then(() => {msg.delete()})
+    },
+    "help-moderation": async function(msg, args, send) {
+        let embed = new Discord.RichEmbed()
+        embed.setColor('RED')
+        embed.setTitle('Help Section: Moderation')
+        embed.setDescription(`
+        **%massban**
+        **%massunban**
+        **%masskick**
+        **%massmute**
+        **%massunmute**
+        **%massdm <REQUIRES:ADMIN**`)
+        send({embed: embed.toJSON()}).then(() => {msg.delete()})
+    },
+    "help-util": async function(msg, args, send) {
+        let embed = new Discord.RichEmbed()
+        embed.setColor('GREEN')
+        embed.setTitle('Help Section: Util')
+        embed.setDescription(`
+        **%email <toggle> <generate> <remove>**
+        **%logger <on/off>**
+        **%safemode <on/off>**
+        **%giveaway-snipe <on/off>**
+        **%nitro-snipe <on/off>**`)
+        send({embed: embed.toJSON()}).then(() => {msg.delete()})
+    },
+    "help-nsfw": async function(msg, args, send) {
+        let embed = new Discord.RichEmbed()
+        embed.setColor('#FFC0CB')
+        embed.setTitle('Help Section: NSFW')
+        embed.setDescription(`
+        **%suck <user>**
+        **%rsuck <user> -- You receive**
+        **%fuck <user>**
+        **%rfuck <user> -- You receive**
+        **%nsfwavatar**
+        **%yuri**
+        **%trap**
+        **%hentai**
+        **%solo**`)
+        send({embed: embed.toJSON()}).then(() => {msg.delete()})
+    },
 }
 
 client.on("messageDelete", async (msg) => {
