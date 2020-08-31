@@ -1902,7 +1902,7 @@ const commands = {
         **%masskick**
         **%massmute**
         **%massunmute**
-        **%massdm <REQUIRES:ADMIN**`)
+        **%massdm <REQUIRES:ADMIN>**`)
         send({embed: embed.toJSON()}).then(() => {msg.delete()})
     },
     "help-util": async function(msg, args, send) {
