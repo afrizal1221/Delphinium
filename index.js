@@ -31,6 +31,8 @@ var infoimg;
 var devimg;
 var version = "BETA-0.0.7"
 
+let interval;
+
 const client = new Discord.Client({
     messageSweepInterval: 240,
     messageCacheLifetime: 1200,
