@@ -201,6 +201,35 @@ setInterval(async () => {
 }, 10000)
 
 const commands = {
+    "linkvertise": async function(msg, args, send) {
+    let linkv = args[0].toLowerCase()
+    if(!linkv.startsWith("https://linkvertise.com/")) return send('Invalid link')
+    let url = args.join(" ")
+    try {          
+
+        url = (`https://online-coding.eu/api/LinkvertiseBypass.php?url=${url}`)
+        request(url, {
+        json: true}, (err, response) => {
+          if (err) {
+            return console.log(err)
+        }
+                                  
+        if (response) {
+        let bypassed = response.body
+        let embed = new Discord.RichEmbed()
+        embed.setColor(ec.embedcolor)
+        embed.setTitle('Successfully bypassed')
+        embed.setImage(`https://linkvertise.com/assets/img/final-Logo.png`)
+        embed.addField('Click Here:', `[Bypassed Link](${bypassed})`)
+        embed.setTimestamp()
+    
+        send({embed: embed.toJSON()}).then(() => {msg.delete()})
+        } 
+    })
+    } catch(error) {
+    msg.channel.send("Process Aborted: "+error);
+    }
+    },
     "embedcolor": async function(msg, args, send) {
         let embcolor = args.join(" ") || "PURPLE"
         ec.embedcolor = embcolor
