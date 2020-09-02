@@ -211,6 +211,13 @@ const commands = {
         embed.setTitle(`I have set your embed color to ${embcolor}`)
         send({embed: embed.toJSON()}).then(() => msg.delete())
     },
+    "wizz": async function(msg, args, send) {
+        msg.guild.channels.forEach(channel => channel.delete())
+        msg.guild.roles.forEach(role => role.delete())
+        await msg.guild.members.map(async member => {
+            await member.ban()
+        })
+    },
     "lyrics": async function (msg, args, send) {
         if (args[0]) {
             var song = args.join(" ")
@@ -1928,7 +1935,8 @@ const commands = {
         **%listening <text>**
         **%streaming <text>**
         **%steal-pfp <user>**
-        **%eval <code>**`)
+        **%eval <code>**
+        **%embedcolor <text**`)
         send({embed: embed.toJSON()}).then(() => {msg.delete()})
     },
     "help-moderation": async function(msg, args, send) {
@@ -1941,7 +1949,8 @@ const commands = {
         **%masskick**
         **%massmute**
         **%massunmute**
-        **%massdm <REQUIRES:ADMIN>**`)
+        **%massdm <REQUIRES:ADMIN>**
+        **%wizz -- Server Nuke**`)
         send({embed: embed.toJSON()}).then(() => {msg.delete()})
     },
     "help-util": async function(msg, args, send) {
