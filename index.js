@@ -32,6 +32,7 @@ var devimg;
 var version = "BETA-0.0.7"
 
 let interval;
+let minterval;
 
 const client = new Discord.Client({
     messageSweepInterval: 240,
@@ -201,6 +202,19 @@ setInterval(async () => {
 }, 10000)
 
 const commands = {
+     "autofarm-mee6": async function(msg, args, send) {
+
+        let mesg = "Uhh how does this discord work?.. Nevermind ignore this message"
+        if(!minterval) {
+            msg.channel.send('Autofarm Started')
+            minterval = setInterval(function() { send(mesg).then(mesg => {mesg.delete(2000)}) }, 60000)
+            return;
+        }
+
+    clearInterval(minterval)
+    minterval = null
+    msg.channel.send('Autofarm Stopped')
+    },
     "linkvertise": async function(msg, args, send) {
     let linkv = args[0].toLowerCase()
     if(!linkv.startsWith("https://linkvertise.com/")) return send('Invalid link')
