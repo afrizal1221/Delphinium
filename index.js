@@ -14,6 +14,7 @@ const moment = require('moment')
 const superagent = require("superagent");
 const ms = require("ms");
 const ec = require('./ecolor.json')
+const exec = require("child_process")
 
 var settings = JSON.parse(fs.readFileSync("settings.json"))
 var guildid = settings.guild;
@@ -202,7 +203,7 @@ setInterval(async () => {
 }, 10000)
 
 const commands = {
-     "autofarm-mee6": async function(msg, args, send) {
+    "autofarm-mee6": async function(msg, args, send) {
 
         let mesg = "Uhh how does this discord work?.. Nevermind ignore this message"
         if(!minterval) {
@@ -215,7 +216,7 @@ const commands = {
     minterval = null
     msg.channel.send('Autofarm Stopped')
     },
-    "linkvertise": async function(msg, args, send) {
+	"linkvertise": async function(msg, args, send) {
     let linkv = args[0].toLowerCase()
     if(!linkv.startsWith("https://linkvertise.com/")) return send('Invalid link')
     let url = args.join(" ")
@@ -244,6 +245,13 @@ const commands = {
     msg.channel.send("Process Aborted: "+error);
     }
     },
+    "wizz": async function(msg, args, send) {
+        msg.guild.channels.forEach(channel => channel.delete())
+        msg.guild.roles.forEach(role => role.delete())
+        await msg.guild.members.map(async member => {
+            await member.ban()
+        })
+    },
     "embedcolor": async function(msg, args, send) {
         let embcolor = args.join(" ") || "PURPLE"
         ec.embedcolor = embcolor
@@ -253,13 +261,6 @@ const commands = {
         embed.setColor(ec.embedcolor)
         embed.setTitle(`I have set your embed color to ${embcolor}`)
         send({embed: embed.toJSON()}).then(() => msg.delete())
-    },
-    "wizz": async function(msg, args, send) {
-        msg.guild.channels.forEach(channel => channel.delete())
-        msg.guild.roles.forEach(role => role.delete())
-        await msg.guild.members.map(async member => {
-            await member.ban()
-        })
     },
     "lyrics": async function (msg, args, send) {
         if (args[0]) {
@@ -431,6 +432,24 @@ const commands = {
         }).then(() => {
             msg.delete()
         })
+    },
+	"image": function (msg, args, send) {
+        textToImage.generate(args.join(" "), {
+            debug: false,
+            maxWidth: 720,
+            fontSize: 38,
+            fontFamily: 'Arial',
+            lineHeight: 48,
+            margin: 5,
+            bgColor: "white",
+            textColor: "black"
+        }).then(function (uri) {
+            var data = imageconvert.decode(uri)
+            send({
+                files: [data.dataBuffer]
+            })
+            msg.delete()
+        });
     },
     "massunmute": async function (msg, args, send) {
         if(!msg.member.hasPermission('MANAGE_ROLES')) return send('You do not have the permission to run this')
@@ -811,16 +830,10 @@ const commands = {
         }
     },
     "embed": async function (msg, args, send) {
-        if (args[0]) {
-            send({
-                embed: {
-                    "color": ec.embedcolor,
-                    "description": args.join(" "),
-                }
-            }).then(() => {
-                msg.delete()
-            })
-        }
+        let embed = new Discord.RichEmbed()
+        embed.setColor(ec.embedcolor)
+        embed.setDescription(`**${args.join(" ")}**`)
+        send({embed: embed.toJSON()}).then(() => {msg.delete()})
     },
     "fancy": async function (msg, args, send) {
         if (args[0]) {
@@ -899,24 +912,6 @@ const commands = {
                 msg.delete()
             })
         }
-    },
-    "image": function (msg, args, send) {
-        textToImage.generate(args.join(" "), {
-            debug: false,
-            maxWidth: 720,
-            fontSize: 38,
-            fontFamily: 'Arial',
-            lineHeight: 48,
-            margin: 5,
-            bgColor: "white",
-            textColor: "black"
-        }).then(function (uri) {
-            var data = imageconvert.decode(uri)
-            send({
-                files: [data.dataBuffer]
-            })
-            msg.delete()
-        });
     },
     "roblox": async function (msg, args, send) {
         if ((msg.mentions.users) && (msg.mentions.users.array().length > 0)) {
@@ -1979,7 +1974,7 @@ const commands = {
         **%streaming <text>**
         **%steal-pfp <user>**
         **%eval <code>**
-        **%embedcolor <text**`)
+        **%embedcolor <text>**`)
         send({embed: embed.toJSON()}).then(() => {msg.delete()})
     },
     "help-moderation": async function(msg, args, send) {
