@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "4anime-scraper": "^1.0.2",
     "@discordjs/uws": "^10.149.0",
     "discord.js": "^11.6.4",
     "figlet": "^1.4.0",
