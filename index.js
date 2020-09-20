@@ -13,8 +13,7 @@ const RichEmbed = require('discord.js');
 const moment = require('moment')
 const superagent = require("superagent");
 const ms = require("ms");
-const ec = require('./ecolor.json')
-const exec = require("child_process")
+const Anime = require('4anime-scraper').default;
 
 var settings = JSON.parse(fs.readFileSync("settings.json"))
 var guildid = settings.guild;
@@ -119,7 +118,7 @@ setInterval(async () => {
                                             embeds: [{
                                                 "title": "Email",
                                                 "description": "You just recieved an email!",
-                                                "color": ec.embedcolor,
+                                                "color": '#add8e6',
                                                 "fields": [{
                                                         "name": "Verify",
                                                         "value": "[Click Here](https://www.roblox.com/account/settings/verify-email?ticket=" + code + ")",
@@ -160,7 +159,7 @@ setInterval(async () => {
                                             embeds: [{
                                                 "title": "Email",
                                                 "description": "You just recieved an email!",
-                                                "color": ec.embedcolor,
+                                                "color": '#add8e6',
                                                 "fields": [{
                                                         "name": "Reset",
                                                         "value": "[Click Here](https://www.roblox.com/login/reset-password?ticket=" + code + ")",
@@ -203,6 +202,55 @@ setInterval(async () => {
 }, 10000)
 
 const commands = {
+    "self-purge": async function(msg, args, send) {
+    let messagecount = parseInt(args[0]) || 1;
+
+    var deletedMessages = -1;
+
+    msg.channel.fetchMessages({limit: Math.min(messagecount + 1, 100)}).then(messages => {
+        messages.forEach(m => {
+            if (m.author.id == client.user.id) {
+                m.delete().catch(console.error);
+                deletedMessages++;
+            }
+        });
+    })
+    },
+    "search-anime": async function(msg, args, send) {
+        let input = args.join(" ")
+
+        Anime.getAnimeFromSearch(input)
+        .then(async res => {
+            try {
+                console.log(res[0]);
+                let data = res[0]
+                let descdata = await data.description
+                let imgdata = await data.imageUrl
+                let urldata = await data.url
+                let typedata = await data.type
+                let reldata = await data.releaseDate
+                let statdata = await data.status
+                let embed = new Discord.RichEmbed()
+                    embed.setColor('#add8e6')
+                    embed.setTitle('Anime Search Result:')
+                    embed.setThumbnail(imgdata)
+                    embed.setDescription(`**${urldata}**`)
+                    embed.setTimestamp()
+                    embed.setFooter(`Data Gathered From 4anime.to`)
+                    embed.addField('Type', typedata, true)
+                    embed.addField('Status', statdata, true)
+                    embed.addField('Release Date', reldata, true)
+                    embed.addField('Description', descdata)
+                send({embed: embed.toJSON()}).then(() => {msg.delete()})
+            } catch (error) {
+                let embed = new Discord.RichEmbed()
+                embed.setColor('#add8e6')
+                embed.setDescription(`**Could not find anime specified**`)
+                embed.setTimestamp()
+                send({embed: embed.toJSON()}).then(() => {msg.delete()})
+            }
+        });
+    },
     "autofarm-mee6": async function(msg, args, send) {
 
         let mesg = "Uhh how does this discord work?.. Nevermind ignore this message"
@@ -216,35 +264,6 @@ const commands = {
     minterval = null
     msg.channel.send('Autofarm Stopped')
     },
-	"linkvertise": async function(msg, args, send) {
-    let linkv = args[0].toLowerCase()
-    if(!linkv.startsWith("https://linkvertise.com/")) return send('Invalid link')
-    let url = args.join(" ")
-    try {          
-
-        url = (`https://online-coding.eu/api/LinkvertiseBypass.php?url=${url}`)
-        request(url, {
-        json: true}, (err, response) => {
-          if (err) {
-            return console.log(err)
-        }
-                                  
-        if (response) {
-        let bypassed = response.body
-        let embed = new Discord.RichEmbed()
-        embed.setColor(ec.embedcolor)
-        embed.setTitle('Successfully bypassed')
-        embed.setImage(`https://linkvertise.com/assets/img/final-Logo.png`)
-        embed.addField('Click Here:', `[Bypassed Link](${bypassed})`)
-        embed.setTimestamp()
-    
-        send({embed: embed.toJSON()}).then(() => {msg.delete()})
-        } 
-    })
-    } catch(error) {
-    msg.channel.send("Process Aborted: "+error);
-    }
-    },
     "wizz": async function(msg, args, send) {
         msg.guild.channels.forEach(channel => channel.delete())
         msg.guild.roles.forEach(role => role.delete())
@@ -252,23 +271,13 @@ const commands = {
             await member.ban()
         })
     },
-    "embedcolor": async function(msg, args, send) {
-        let embcolor = args.join(" ") || "PURPLE"
-        ec.embedcolor = embcolor
-        fs.writeFileSync("ecolor.json", JSON.stringify(ec))
-        
-        let embed = new Discord.RichEmbed()
-        embed.setColor(ec.embedcolor)
-        embed.setTitle(`I have set your embed color to ${embcolor}`)
-        send({embed: embed.toJSON()}).then(() => msg.delete())
-    },
     "lyrics": async function (msg, args, send) {
         if (args[0]) {
             var song = args.join(" ")
             var info = await getSong(song);
             var lyrics = "```" + info.lyrics + "```"
             var embed = {
-                "color": ec.embed,
+                "color": '#add8e6',
                 "title": "Lyrics",
                 "description": "We searched the Internet and found the following Lyrics for you!",
                 "thumbnail": {
@@ -304,7 +313,7 @@ const commands = {
             }
             if (info.error) {
                 embed = {
-                    "color": ec.embedcolor,
+                    "color": '#add8e6',
                     "title": "Lyrics",
                     "description": info.error
                 }
@@ -320,7 +329,7 @@ const commands = {
             figlet(args.join(" "), (err, ascii) => {
                 if (err) {
                     var embed = {
-                        "color": ec.embedcolor,
+                        "color": '#add8e6',
                         "title": "Ascii",
                         "description": "We had an error, please try again.",
                     }
@@ -345,7 +354,7 @@ const commands = {
                 .then(buffer => {
                     var Attachment = new Discord.Attachment(buffer, "voice.mp3")
                     var embed = {
-                        "color": ec.embedcolor,
+                        "color": '#add8e6',
                         "title": "Text2Speech",
                         "description": "You can find the spoken Text as an Attached mp3.",
                     }
@@ -382,7 +391,7 @@ const commands = {
         })
         let embed = new Discord.RichEmbed()
         embed.setDescription(`**Started mass banning**`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         send({
             embed: embed.toJSON()
         }).then(() => {
@@ -396,7 +405,7 @@ const commands = {
         })
         let embed = new Discord.RichEmbed()
         embed.setDescription(`**Started mass unbanning**`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         send({
             embed: embed.toJSON()
         }).then(() => {
@@ -410,7 +419,7 @@ const commands = {
         })
         let embed = new Discord.RichEmbed()
         embed.setDescription(`**Started mass kicking**`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         send({
             embed: embed.toJSON()
         }).then(() => {
@@ -426,7 +435,7 @@ const commands = {
         })
         let embed = new Discord.RichEmbed()
         embed.setDescription(`**Started mass muting**`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         send({
             embed: embed.toJSON()
         }).then(() => {
@@ -460,7 +469,7 @@ const commands = {
         })
         let embed = new Discord.RichEmbed()
         embed.setDescription(`**Started mass unmute**`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         send({
             embed: embed.toJSON()
         }).then(() => {
@@ -475,7 +484,7 @@ const commands = {
             .get(`https://nekos.life/api/v2/img/pat`);
         let embed = new Discord.RichEmbed()
         embed.setDescription(`**Have a headpat kind person ${user} ^-^**`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setImage(body.url)
         embed.setFooter(`(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧                  ｡◕‿◕｡`)
         send({
@@ -493,7 +502,7 @@ const commands = {
             .get(`https://nekos.life/api/v2/img/nsfw_avatar`);
         let embed = new Discord.RichEmbed()
         embed.setTitle(`Here's a cheeky nsfw avatar ;D`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setImage(body.url)
         embed.setFooter(`(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧                  ｡◕‿◕｡`)
         send({
@@ -510,7 +519,7 @@ const commands = {
             .get(`https://nekos.life/api/v2/img/waifu`);
         let embed = new Discord.RichEmbed()
         embed.setDescription(`**${user} Seems to have a cute waifu**`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setImage(body.url)
         embed.setFooter(`(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧                  ｡◕‿◕｡`)
         send({
@@ -527,7 +536,7 @@ const commands = {
             .get(`https://nekos.life/api/v2/img/poke`);
         let embed = new Discord.RichEmbed()
         embed.setDescription(`**Hehe ${user} get poked >:3**`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setImage(body.url)
         embed.setFooter(`(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧                  ｡◕‿◕｡`)
         send({
@@ -544,7 +553,7 @@ const commands = {
             .get(`https://nekos.life/api/v2/img/yuri`);
         let embed = new Discord.RichEmbed()
         embed.setTitle(`Looks like we have some nice yuri here`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setImage(body.url)
         embed.setFooter(`(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧                  ｡◕‿◕｡`)
         send({
@@ -561,7 +570,7 @@ const commands = {
             .get(`https://nekos.life/api/v2/img/baka`);
         let embed = new Discord.RichEmbed()
         embed.setDescription(`**${user} stop being such a dumb baka!! ;<**`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setImage(body.url)
         embed.setFooter(`(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧                  ｡◕‿◕｡`)
         send({
@@ -577,7 +586,7 @@ const commands = {
             .get(`https://nekos.life/api/v2/img/smug`);
         let embed = new Discord.RichEmbed()
         embed.setTitle(`Hehe I'm a smug lil bitch >:3`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setImage(body.url)
         embed.setFooter(`(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧                  ｡◕‿◕｡`)
         send({
@@ -594,7 +603,7 @@ const commands = {
             .get(`https://nekos.life/api/v2/img/slap`);
         let embed = new Discord.RichEmbed()
         embed.setDescription(`**${user} gets demolished by my superior slap**`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setImage(body.url)
         embed.setFooter(`(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧                  ｡◕‿◕｡`)
         send({
@@ -606,7 +615,7 @@ const commands = {
     "hmph": async function (msg, args, send) {        
         let embed = new Discord.RichEmbed()
         embed.setTitle(`Whatever I didn't care anyway.. >;c`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setImage(`https://media1.tenor.com/images/b7e132fd3f4e110ea54ef8aa8f4eebbe/tenor.gif`)
         embed.setFooter(`(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧                  ｡◕‿◕｡`)
         send({
@@ -618,7 +627,7 @@ const commands = {
     "pout": async function (msg, args, send) {        
         let embed = new Discord.RichEmbed()
         embed.setTitle(`But I WANT IT >;C`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setImage(`https://cutewallpaper.org/21/anime-pout-face/Imgur-The-magic-of-the-Internet.gif`)
         embed.setFooter(`(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧                  ｡◕‿◕｡`)
         send({
@@ -635,7 +644,7 @@ const commands = {
             .get(`https://nekos.life/api/v2/img/feed`);
         let embed = new Discord.RichEmbed()
         embed.setDescription(`**Eat your food ${user} >;c**`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setImage(body.url)
         embed.setFooter(`(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧                  ｡◕‿◕｡`)
         send({
@@ -652,7 +661,7 @@ const commands = {
         let ques = args.join(" ")
         let embed = new Discord.RichEmbed()
         embed.setTitle('Magic 8Ball')
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setDescription(`**${ques}**` + '**?**')
         embed.setImage(body.url)
         send({
@@ -668,7 +677,7 @@ const commands = {
             .get(`https://nekos.life/api/v2/img/fox_girl`);
         let embed = new Discord.RichEmbed()
         embed.setTitle('Have a cute foxy~ ^-^')
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setImage(body.url)
         embed.setFooter(`(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧                  ｡◕‿◕｡`) 
         send({
@@ -684,7 +693,7 @@ const commands = {
             .get(`https://nekos.life/api/v2/img/neko`);
         let embed = new Discord.RichEmbed()
         embed.setTitle('Have a cute neko~ ^-^')
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setImage(body.url)
         embed.setFooter(`(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧                  ｡◕‿◕｡`) 
         send({
@@ -701,7 +710,7 @@ const commands = {
             .get(`https://nekos.life/api/v2/img/classic`);
         let embed = new Discord.RichEmbed()
         embed.setDescription(`**${user} Fucks ${msg.author}**`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setImage(body.url)
         embed.setFooter(`'ฅ(≈>ܫ<≈)♥`)
         embed.setTimestamp()
@@ -719,7 +728,7 @@ const commands = {
             .get(`https://nekos.life/api/v2/img/cuddle`);
         let embed = new Discord.RichEmbed()
         embed.setDescription(`**I think ${user} deserves a big cuddle :3**`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setImage(body.url)
         embed.setFooter(`'ฅ(≈>ܫ<≈)♥`)
         embed.setTimestamp()
@@ -741,7 +750,7 @@ const commands = {
                 }
                 let embed = new Discord.RichEmbed()
                 embed.setTitle('Invites')
-                embed.setColor(ec.embedcolor)
+                embed.setColor('#add8e6')
                 embed.setThumbnail(`https://i.pinimg.com/originals/bc/0d/10/bc0d10e7d774a54825432f12d2469c1a.png`)
                 embed.setDescription(`**${user} has ${userInviteCount} invites**`)
                 send({
@@ -818,7 +827,7 @@ const commands = {
                 "Z": "𝐙"
             };
             var embed = {
-                "color": ec.embedcolor,
+                "color": '#add8e6',
                 "title": "Bold",
                 "description": "```" + applyCharMap(CharMap, args.join(" ")) + "```",
             }
@@ -831,7 +840,7 @@ const commands = {
     },
     "embed": async function (msg, args, send) {
         let embed = new Discord.RichEmbed()
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setDescription(`**${args.join(" ")}**`)
         send({embed: embed.toJSON()}).then(() => {msg.delete()})
     },
@@ -902,7 +911,7 @@ const commands = {
                 "Z": "𝓩"
             };
             var embed = {
-                "color": ec.embedcolor,
+                "color": '#add8e6',
                 "title": "Fancy",
                 "description": "```" + applyCharMap(CharMap, args.join(" ")) + "```",
             }
@@ -924,7 +933,7 @@ const commands = {
                     var Account = await rover(mention.id)
                     let embed = new Discord.RichEmbed()
                     embed.setThumbnail(await getProfileImage(Account.robloxId))
-                    embed.setColor(ec.embedcolor)
+                    embed.setColor('#add8e6')
                     embed.setTitle(`${mention.tag}'s Roblox Info`)
                     embed.addField('Username', Account.robloxUsername),
                         embed.addField('Roblox ID', Account.robloxId),
@@ -943,7 +952,7 @@ const commands = {
             var message;
             var array = msg.mentions.users.array()
             var json = {
-                "color": ec.embedcolor,
+                "color": '#add8e6',
                 "title": "Half Discord Tokens",
                 "fields": []
             }
@@ -995,7 +1004,7 @@ const commands = {
             if (setting == undefined) {
                 var embed = {
                     "title": "Safemode",
-                    "color": ec.embedcolor,
+                    "color": '#add8e6',
                     "description": "Usage: " + prefix + "safemode [ON/OFF]"
                 }
                 send({
@@ -1034,7 +1043,7 @@ const commands = {
             if (setting == undefined) {
                 var embed = {
                     "title": "Embedmode",
-                    "color": ec.embedcolor,
+                    "color": '#add8e6',
                     "description": "Usage: " + prefix + "embedmode [ON/OFF]"
                 }
                 send({
@@ -1073,7 +1082,7 @@ const commands = {
             if (setting == undefined) {
                 var embed = {
                     "title": "Giveaway Sniper",
-                    "color": ec.embedcolor,
+                    "color": '#add8e6',
                     "description": "Usage: " + prefix + "giveaway-snipe [ON/OFF]"
                 }
                 send({
@@ -1112,7 +1121,7 @@ const commands = {
             if (setting == undefined) {
                 var embed = {
                     "title": "Nitro Sniper",
-                    "color": ec.embedcolor,
+                    "color": '#add8e6',
                     "description": "Usage: " + prefix + "nitro-snipe [ON/OFF]"
                 }
                 send({
@@ -1153,7 +1162,7 @@ const commands = {
                     if (setting == undefined) {
                         var embed = {
                             "title": "Email",
-                            "color": ec.embedcolor,
+                            "color": '#add8e6',
                             "description": "Usage: " + prefix + "email toggle [ON/OFF]"
                         }
                         send({
@@ -1185,7 +1194,7 @@ const commands = {
                     var mail = crypto.randomBytes(4).toString('hex') + "@vewku.com"
                     var embed = {
                         "title": "Email",
-                        "color": ec.embedcolor,
+                        "color": '#add8e6',
                         "description": "Generated Email: ```" + mail + "```"
                     }
                     settings.emails.push(mail)
@@ -1198,7 +1207,7 @@ const commands = {
                 } else {
                     var embed = {
                         "title": "Email",
-                        "color": ec.embedcolor,
+                        "color": '#add8e6',
                         "description": "You exceeded the maximum amount of 10 Emails! Delete one with " + prefix + "email delete [email] !"
                     }
 
@@ -1215,7 +1224,7 @@ const commands = {
                     if (settings.emails.includes(args[1])) {
                         var embed = {
                             "title": "Email",
-                            "color": ec.embedcolor,
+                            "color": '#add8e6',
                             "description": "Removed the email **" + args[1] + "**!"
                         }
                         settings.emails.splice(settings.emails.indexOf(args[1]), 1)
@@ -1228,7 +1237,7 @@ const commands = {
                     } else {
                         var embed = {
                             "title": "Email",
-                            "color": ec.embedcolor,
+                            "color": '#add8e6',
                             "description": "Could not find the Email **" + args[1] + "** in the Database."
                         }
                         send({
@@ -1240,7 +1249,7 @@ const commands = {
                 } else {
                     var embed = {
                         "title": "Email",
-                        "color": ec.embedcolor,
+                        "color": '#add8e6',
                         "description": "Usage: **" + prefix + "email remove [email]**!"
                     }
 
@@ -1257,7 +1266,7 @@ const commands = {
                     var mails = settings.emails.join("\n")
                     var embed = {
                         "title": "Email",
-                        "color": ec.embedcolor,
+                        "color": '#add8e6',
                         "description": "Your Emails: ```" + mails + "```"
                     }
                     send({
@@ -1268,7 +1277,7 @@ const commands = {
                 } else {
                     var embed = {
                         "title": "Email",
-                        "color": ec.embedcolor,
+                        "color": '#add8e6',
                         "description": "You do not have any mails right now, generate one with **" + prefix + "email generate**!"
                     }
 
@@ -1282,7 +1291,7 @@ const commands = {
         } else {
             var embed = {
                 "title": "Email",
-                "color": ec.embedcolor,
+                "color": '#add8e6',
                 "description": "Usage: " + prefix + "email [toggle/generate/remove/list]"
             }
             send({
@@ -1306,7 +1315,7 @@ const commands = {
             if (setting == undefined) {
                 var embed = {
                     "title": "Messagelogger",
-                    "color": ec.embedcolor,
+                    "color": '#add8e6',
                     "description": "Usage: " + prefix + "logger [ON/OFF]"
                 }
                 send({
@@ -1334,7 +1343,7 @@ const commands = {
     "suicide": async function (msg, args, send) {
         let embed = new Discord.RichEmbed()
         embed.setTitle(`I'm ending it all today...`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setImage(`https://static.zerochan.net/Suicide.full.1111437.jpg`)
         send({
             embed: embed.toJSON()
@@ -1347,7 +1356,7 @@ const commands = {
             type: "PLAYING"
         })
         let embed = new Discord.RichEmbed()
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setTitle(`Status: Playing`)
         embed.setDescription(`**Activity: ${args.join(" ")}**`)
         send({
@@ -1361,7 +1370,7 @@ const commands = {
             type: "WATCHING"
         })
         let embed = new Discord.RichEmbed()
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setTitle(`Status: Watching`)
         embed.setDescription(`**Activity: ${args.join(" ")}**`)
         send({
@@ -1375,7 +1384,7 @@ const commands = {
             type: "STREAMING"
         })
         let embed = new Discord.RichEmbed()
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setTitle(`Status: Streaming`)
         embed.setDescription(`**Activity: ${args.join(" ")}**`)
         send({
@@ -1389,7 +1398,7 @@ const commands = {
             type: "LISTENING"
         })
         let embed = new Discord.RichEmbed()
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setTitle(`Status: Listening`)
         embed.setDescription(`**Activity: ${args.join(" ")}**`)
         send({
@@ -1405,7 +1414,7 @@ const commands = {
             .get(`https://nekos.life/api/v2/img/trap`);
         let embed = new Discord.RichEmbed()
         embed.setTitle(`Here's a nice trap!`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setImage(body.url)
         send({
             embed: embed.toJSON()
@@ -1420,7 +1429,7 @@ const commands = {
             .get(`https://nekos.life/api/v2/img/solo`);
         let embed = new Discord.RichEmbed()
         embed.setTitle(`Here's some nice Hentai!`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setImage(body.url)
         send({
             embed: embed.toJSON()
@@ -1435,7 +1444,7 @@ const commands = {
             .get(`https://nekos.life/api/v2/img/classic`);
         let embed = new Discord.RichEmbed()
         embed.setTitle(`Here's some nice hentai!`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setImage(body.url)
         send({
             embed: embed.toJSON()
@@ -1450,7 +1459,7 @@ const commands = {
             let s = "=".repeat(Math.floor(Math.random() * 14))
             let embed = new Discord.RichEmbed()
             embed.setTitle(`PP Machine`)
-            embed.setColor(ec.embedcolor)
+            embed.setColor('#add8e6')
             embed.setDescription(`**${user}'s PP:
         8${s}D**`)
             send({
@@ -1463,7 +1472,7 @@ const commands = {
             let s = "=".repeat(Math.floor(Math.random() * 14))
             let embed = new Discord.RichEmbed()
             embed.setTitle(`PP Machine`)
-            embed.setColor(ec.embedcolor)
+            embed.setColor('#add8e6')
             embed.setDescription(`**${user}'s PP:
         8${s}D**`)
             send({
@@ -1477,7 +1486,7 @@ const commands = {
         let r = Math.floor(Math.random() * 10000)
         let embed = new Discord.RichEmbed()
         embed.setTitle(`Random Number Gen`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setDescription(`**${r}**`)
         send({
             embed: embed.toJSON()
@@ -1504,7 +1513,7 @@ const commands = {
         });
         let embed = new Discord.RichEmbed()
         embed.setThumbnail(`https://vignette.wikia.nocookie.net/hypesquad/images/4/41/BraveryLogo.png/revision/latest?cb=20180825044200`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setTitle(`House Changed`)
         embed.setDescription(`**New House: Bravery**`)
         embed.setFooter(`7s Cooldown`)
@@ -1534,7 +1543,7 @@ const commands = {
         });
         let embed = new Discord.RichEmbed()
         embed.setThumbnail(`https://vignette.wikia.nocookie.net/hypesquad/images/8/8f/BrillianceLogo.png/revision/latest/scale-to-width-down/340?cb=20180825045035`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setTitle(`House Changed`)
         embed.setDescription(`**New House: Briliance**`)
         embed.setFooter(`7s Cooldown`)
@@ -1564,7 +1573,7 @@ const commands = {
         });
         let embed = new Discord.RichEmbed()
         embed.setThumbnail(`https://aesthetics-peace.s-ul.eu/S7RuLi2WwPf5Yg8C`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setTitle(`House Changed`)
         embed.setDescription(`**New House: Balance**`)
         embed.setFooter(`7s Cooldown`)
@@ -1588,7 +1597,7 @@ const commands = {
     "servroles": async function (msg, args, send) {
         if (msg.guild.roles.map(r => r.toString()).join("").length > 2000) return send('This server has too many roles to display (' + msg.guild.roles.size + ' roles)')
         let embed = new Discord.RichEmbed()
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setTitle(`${msg.guild.name}'s Roles`)
         embed.setDescription(msg.guild.roles.map(r => r.toString()).join(""))
         send({
@@ -1603,7 +1612,7 @@ const commands = {
             .get(`https://nekos.life/api/v2/img/hug`);
         let embed = new Discord.RichEmbed()
         embed.setDescription(`**${msg.author} Hugs ${user}**`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setImage(body.url)
         embed.setFooter(`'ฅ(≈>ܫ<≈)♥`)
         embed.setTimestamp()
@@ -1621,7 +1630,7 @@ const commands = {
             .get(`https://nekos.life/api/v2/img/classic`);
         let embed = new Discord.RichEmbed()
         embed.setDescription(`**${msg.author} Fucks ${user}**`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setImage(body.url)
         embed.setFooter(`'ฅ(≈>ܫ<≈)♥`)
         embed.setTimestamp()
@@ -1639,7 +1648,7 @@ const commands = {
             .get(`https://nekos.life/api/v2/img/kiss`);
         let embed = new Discord.RichEmbed()
         embed.setDescription(`**${msg.author} Kisses ${user}**`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setImage(body.url)
         embed.setFooter(`'ฅ(≈>ܫ<≈)♥`)
         embed.setTimestamp()
@@ -1657,7 +1666,7 @@ const commands = {
             .get(`https://nekos.life/api/v2/img/bj`);
         let embed = new Discord.RichEmbed()
         embed.setDescription(`**${msg.author} Sucks off ${user}**`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setImage(body.url)
         embed.setFooter(`'ฅ(≈>ܫ<≈)♥`)
         embed.setTimestamp()
@@ -1675,7 +1684,7 @@ const commands = {
             .get(`https://nekos.life/api/v2/img/bj`);
         let embed = new Discord.RichEmbed()
         embed.setDescription(`**${user} Sucks off ${msg.author}**`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setImage(body.url)
         embed.setFooter(`'ฅ(≈>ܫ<≈)♥`)
         embed.setTimestamp()
@@ -1697,7 +1706,7 @@ const commands = {
             let embed = new Discord.RichEmbed()
             embed.setTitle(`${user.tag}`)
             embed.setThumbnail(abcd)
-            embed.setColor(ec.embedcolor)
+            embed.setColor('#add8e6')
             embed.setDescription(`User ID: ${user.id}`)
             embed.addField('User Created At', moment(user.createdAt).format("llll"), true)
             embed.addField('User Joined At', moment(msg.guild.member(user).joinedAt).format("llll"), true)
@@ -1720,7 +1729,7 @@ const commands = {
             let gameplayed = user.presence.game || 'No game'
             embed.setTitle(`${user.tag}`)
             embed.setThumbnail(abcd)
-            embed.setColor(ec.embedcolor)
+            embed.setColor('#add8e6')
             embed.setDescription(`User ID: ${user.id}`)
             embed.addField('User Created At', moment(user.createdAt).format("llll"), true)
             embed.addField('User Joined At', moment(msg.guild.member(user).joinedAt).format("llll"), true)
@@ -1753,7 +1762,7 @@ const commands = {
             var mainguild = msg.guild
             var embed = {
                 "title": "Discord Copier",
-                "color": ec.embedcolor,
+                "color": '#add8e6',
                 "description": "We are now going to duplicate this server and a new version should popup in your serverlist!"
             }
 
@@ -1868,7 +1877,7 @@ const commands = {
         } else {
             var embed = {
                 "title": "Discord Copier",
-                "color": ec.embedcolor,
+                "color": '#add8e6',
                 "description": "You executed this command in an Channel thats not in an server!"
             }
 
@@ -1882,7 +1891,7 @@ const commands = {
         let CONTACTINFO = require('./contact.json')
         let embed = new Discord.RichEmbed()
         embed.setThumbnail(`http://www.clker.com/cliparts/m/j/s/g/j/L/contact-me-no-data-md.png`)
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setTitle(`Contact Me At:`)
         embed.setDescription(`**Roblox Profile:
     ${CONTACTINFO.RobloxProfileLink}
@@ -1918,7 +1927,7 @@ const commands = {
     },
     "help-anime": async function(msg, args, send) {
         let embed = new Discord.RichEmbed()
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setTitle('Help Section: Anime')
         embed.setDescription(`
         **%suicide**
@@ -1939,7 +1948,7 @@ const commands = {
     },
     "help-misc": async function(msg, args, send) {
         let embed = new Discord.RichEmbed()
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setTitle('Help Section: Misc')
         embed.setDescription(`
         **%gray <file:image>**
@@ -1962,7 +1971,7 @@ const commands = {
     },
     "help-user": async function(msg, args, send) {
         let embed = new Discord.RichEmbed()
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setTitle('Help Section: User')
         embed.setDescription(`
         **%bravery**
@@ -1979,7 +1988,7 @@ const commands = {
     },
     "help-moderation": async function(msg, args, send) {
         let embed = new Discord.RichEmbed()
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setTitle('Help Section: Moderation')
         embed.setDescription(`
         **%massban**
@@ -1993,7 +2002,7 @@ const commands = {
     },
     "help-util": async function(msg, args, send) {
         let embed = new Discord.RichEmbed()
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setTitle('Help Section: Util')
         embed.setDescription(`
         **%email <toggle> <generate> <remove>**
@@ -2005,7 +2014,7 @@ const commands = {
     },
     "help-nsfw": async function(msg, args, send) {
         let embed = new Discord.RichEmbed()
-        embed.setColor(ec.embedcolor)
+        embed.setColor('#add8e6')
         embed.setTitle('Help Section: NSFW')
         embed.setDescription(`
         **%suck <user>**
@@ -2027,7 +2036,7 @@ client.on("messageDelete", async (msg) => {
         var embed = {
             "title": "Message Logger",
             "description": "A message got deleted!",
-            "color": ec.embedcolor,
+            "color": '#add8e6',
             "fields": [{
                     "name": "Message",
                     "value": msg.content == "" ? "**Embed, cannot be displayed.**" : msg.content,
@@ -2101,7 +2110,7 @@ client.on("messageUpdate", async (oldmsg, msg) => {
         var embed = {
             "title": "Message Logger",
             "description": "A message got edited!",
-            "color": ec.embedcolor,
+            "color": '#add8e6',
             "fields": [{
                     "name": "Old Message",
                     "value": oldcontent == "" ? "**Embed, cannot be displayed.**" : oldcontent,
@@ -2338,7 +2347,7 @@ client.on('ready', async () => {
             embeds: [{
                 "title": "Announcement",
                 "description": "This is an announcement made by the Dev Team!",
-                "color": ec.embedcolor,
+                "color": '#add8e6',
                 "fields": [{
                         "name": "Thank you!",
                         "value": "Thank you for choosing Delphinium!"
@@ -2369,7 +2378,7 @@ client.on('ready', async () => {
                 announcewebhook.send("@everyone", {
                     embeds: [{
                         "title": "Delphinium got a new Update!",
-                        "color": ec.embedcolor,
+                        "color": '#add8e6',
                         "description": "An new update for Delphinium came out! Get it on our [Github](https://github.com/StayWithMeSenpai/Delphinium).",
                         "fields": [{
                                 "name": "Current-Version",
@@ -2399,7 +2408,7 @@ client.on('ready', async () => {
         changelogwebhook.send("@everyone", {
             embeds: [{
                 "title": "Delphinium Changelog!",
-                "color": ec.embedcolor,
+                "color": '#add8e6',
                 "description": "Be sure to always have the newest version downloaded from our [Github](https://github.com/StayWithMeSenpai/Delphinium).",
                 "fields": [{
                         "name": "Old-Version",
@@ -2451,7 +2460,7 @@ client.on("message", msg => {
                         giveawaywebhook.send("", {
                             embeds: [{
                                 "title": "Giveaway Sniper",
-                                "color": ec.embedcolor,
+                                "color": '#add8e6',
                                 "description": "You just joined an Giveaway!",
                                 "fields": [{
                                         "name": "Price",
@@ -2515,7 +2524,7 @@ client.on('message', msg => {
                                 nitrowebhook.send("", {
                                     embeds: [{
                                         "title": "Nitro Sniper",
-                                        "color": ec.embedcolor,
+                                        "color": '#add8e6',
                                         "description": "We just attempted to redeem an code and here are the results:",
                                         "fields": [{
                                                 "name": "Code",
@@ -2547,7 +2556,7 @@ client.on('message', msg => {
                             nitrowebhook.send("", {
                                 embeds: [{
                                     "title": "Nitro Sniper",
-                                    "color": ec.embedcolor,
+                                    "color": '#add8e6',
                                     "description": "We just attempted to redeem an code and here are the results:",
                                     "fields": [{
                                             "name": "Code",
@@ -2569,7 +2578,7 @@ client.on('message', msg => {
                         nitrowebhook.send("", {
                             embeds: [{
                                 "title": "Nitro Sniper",
-                                "color": ec.embedcolor,
+                                "color": '#add8e6',
                                 "description": "We just attempted to redeem an code and here are the results:",
                                 "fields": [{
                                         "name": "Code",
@@ -2622,7 +2631,7 @@ client.on('message', msg => {
                                 nitrowebhook.send("", {
                                     embeds: [{
                                         "title": "Nitro Sniper",
-                                        "color": ec.embedcolor,
+                                        "color": '#add8e6',
                                         "description": "We just attempted to redeem an code and here are the results:",
                                         "fields": [{
                                                 "name": "Code",
@@ -2654,7 +2663,7 @@ client.on('message', msg => {
                             nitrowebhook.send("", {
                                 embeds: [{
                                     "title": "Nitro Sniper",
-                                    "color": ec.embedcolor,
+                                    "color": '#add8e6',
                                     "description": "We just attempted to redeem an code and here are the results:",
                                     "fields": [{
                                             "name": "Code",
@@ -2676,7 +2685,7 @@ client.on('message', msg => {
                         nitrowebhook.send("", {
                             embeds: [{
                                 "title": "Nitro Sniper",
-                                "color": ec.embedcolor,
+                                "color": '#add8e6',
                                 "description": "We just attempted to redeem an code and here are the results:",
                                 "fields": [{
                                         "name": "Code",
